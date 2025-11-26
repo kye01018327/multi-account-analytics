@@ -1,15 +1,38 @@
 import { useNavigate } from 'react-router'
 
 
-function Login() {
-    let navigate = useNavigate()
+export default function Login() {
     return (
         <>
-            <div>Hello Login page</div>
-            <button onClick={() => {navigate('/home')}}>Log In</button>
-            <button onClick={() => {navigate('/createaccount')}}>Create Account</button>
+            <Title/>
+            <SignInForm/>
+            <SignUpButton/>
         </>
     )
 }
 
-export default Login
+function Title() {
+    return (
+        <div>Login Page</div>
+    )
+}
+
+function SignInForm() {
+    let navigate = useNavigate()
+    return (
+        <form onSubmit={(e) => {
+            e.preventDefault
+            navigate('home')}}>
+            <input name='Username' placeholder='Username'/>
+            <input name='Password' placeholder='Password'/>
+            <button type='submit'>Log In</button>
+        </form>
+    )
+}
+
+function SignUpButton() {
+    let navigate = useNavigate()
+    return (
+        <button onClick={() => {navigate('/signup')}}>Sign Up</button>
+    )
+}
