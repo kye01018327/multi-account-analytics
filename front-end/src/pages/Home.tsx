@@ -5,7 +5,7 @@ function Home() {
     let navigate = useNavigate()
     return (
         <>
-            <div>Hello Home</div>
+            <div>Hello Home page</div>
             <button onClick={() => {navigate('/')}}>Log Out</button>
         </>
     )
