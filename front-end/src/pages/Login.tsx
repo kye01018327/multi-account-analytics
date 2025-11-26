@@ -4,7 +4,11 @@ import { useNavigate } from 'react-router'
 function Login() {
     let navigate = useNavigate()
     return (
-        <button onClick={() => {navigate('/home')}}>Log In</button>
+        <>
+            <div>Hello Login page</div>
+            <button onClick={() => {navigate('/home')}}>Log In</button>
+            <button onClick={() => {navigate('/createaccount')}}>Create Account</button>
+        </>
     )
 }
 
