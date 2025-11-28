@@ -1,11 +1,12 @@
-import { useNavigate } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 
 
 function Profile() {
+    const { username } = useParams()
     let navigate = useNavigate()
     return (
         <>
-            <div>Profile page</div>
+            <div>Hello, { username }</div>
             <button onClick={() => {navigate('/')}}>Log Out</button>
         </>
     )
