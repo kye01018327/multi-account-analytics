@@ -34,9 +34,9 @@ function ProfileForm() {
 
     const handleCreateProfile = (e: any) => {
         e.preventDefault()
+        setMessage('Profile creation currently WIP')
         if (username != '') {
             // Profile Creation functionality
-            setMessage('Profile creation currently WIP')
         }
     }
 
