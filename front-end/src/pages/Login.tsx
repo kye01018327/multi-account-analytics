@@ -19,11 +19,15 @@ function Title() {
 
 function ProfileForm() {
     const [username, setUsername] = useState('')
+    const [message, setMessage] = useState('')
     let navigate = useNavigate()
 
     const handleViewProfile = (e: any) => {
         e.preventDefault()
         if (username != '') {
+            // Check if profile exists
+
+            // Navigate to 
             navigate(`/profile/${username}`)
         }
     }
@@ -31,7 +35,8 @@ function ProfileForm() {
     const handleCreateProfile = (e: any) => {
         e.preventDefault()
         if (username != '') {
-            
+            // Profile Creation functionality
+            setMessage('Profile creation currently WIP')
         }
     }
 
@@ -43,6 +48,7 @@ function ProfileForm() {
 
             <button onClick={handleViewProfile}>View Profile</button>
             <button onClick={handleCreateProfile}>Create Profile</button>
+            <div>{message}</div>
         </>
     )
 }
