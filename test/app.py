@@ -13,12 +13,12 @@ db = Database(
     env['DB_HOST'],
     env['DB_PORT'])
 
-@app.route('/')
-def test_method():
+@app.route('/<username>')
+def test_method(username):
     db.cur.execute(
         '''
         SELECT * FROM users
-        WHERE username = 'test1'
-        '''
+        WHERE username = %s
+        ''', (username,)
     )
     return db.cur.fetchall()
