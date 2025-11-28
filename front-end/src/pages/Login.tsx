@@ -21,7 +21,7 @@ function ProfileForm() {
     return (
         <form onSubmit={(e) => {
             e.preventDefault
-            navigate('home')}}>
+            navigate('profile')}}>
             <input name='Username' placeholder='Username'/>
             <button type='submit'>View Profile</button>
             <button type='submit'>Create Profile</button>

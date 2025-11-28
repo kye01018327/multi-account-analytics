@@ -1,14 +1,14 @@
 import { useNavigate } from 'react-router'
 
 
-function Home() {
+function Profile() {
     let navigate = useNavigate()
     return (
         <>
-            <div>Home page</div>
+            <div>Profile page</div>
             <button onClick={() => {navigate('/')}}>Log Out</button>
         </>
     )
 }
 
-export default Home
+export default Profile
