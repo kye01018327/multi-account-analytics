@@ -5,8 +5,7 @@ export default function Login() {
     return (
         <>
             <Title/>
-            <SignInForm/>
-            <CreateProfileButton/>
+            <ProfileForm/>
         </>
     )
 }
@@ -17,7 +16,7 @@ function Title() {
     )
 }
 
-function SignInForm() {
+function ProfileForm() {
     let navigate = useNavigate()
     return (
         <form onSubmit={(e) => {
@@ -25,13 +24,7 @@ function SignInForm() {
             navigate('home')}}>
             <input name='Username' placeholder='Username'/>
             <button type='submit'>View Profile</button>
+            <button type='submit'>Create Profile</button>
         </form>
-    )
-}
-
-function CreateProfileButton() {
-    let navigate = useNavigate()
-    return (
-        <button onClick={() => {navigate('/createprofile')}}>Sign Up</button>
     )
 }
