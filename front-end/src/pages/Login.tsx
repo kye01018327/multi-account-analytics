@@ -21,20 +21,28 @@ function ProfileForm() {
     const [username, setUsername] = useState('')
     let navigate = useNavigate()
 
-    const handleSubmit = (e: any) => {
+    const handleViewProfile = (e: any) => {
         e.preventDefault()
         if (username != '') {
             navigate(`/profile/${username}`)
         }
     }
 
+    const handleCreateProfile = (e: any) => {
+        e.preventDefault()
+        if (username != '') {
+            
+        }
+    }
+
     return (
-        <form onSubmit={handleSubmit}>
+        <>
             <input onChange={(e) => {
                 setUsername(e.target.value)}
             } name='Username' placeholder='Username'/>
-            <button type='submit'>View Profile</button>
-            <button type='submit'>Create Profile</button>
-        </form>
+
+            <button onClick={handleViewProfile}>View Profile</button>
+            <button onClick={handleCreateProfile}>Create Profile</button>
+        </>
     )
 }
