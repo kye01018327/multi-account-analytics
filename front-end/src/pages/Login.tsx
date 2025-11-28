@@ -23,7 +23,9 @@ function ProfileForm() {
 
     const handleSubmit = (e: any) => {
         e.preventDefault()
-        navigate(`/profile/${username}`)
+        if (username != '') {
+            navigate(`/profile/${username}`)
+        }
     }
 
     return (
