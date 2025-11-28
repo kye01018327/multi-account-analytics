@@ -14,8 +14,11 @@ db = Database(
     env['DB_PORT'])
 
 @app.route('/profiles/<username>', methods=['GET'])
-def get_profile():
-
+def get_profile(username):
+    # Check if profile exists
+        
+    # If profile does not exist, return JSON with null
+    # If profile exists, return JSON with content
     pass
 
 @app.route('/profiles', methods=['POST'])
