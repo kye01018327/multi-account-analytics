@@ -30,6 +30,9 @@ function ProfileForm() {
             // Navigate to 
             navigate(`/profile/${username}`)
         }
+        else {
+            setMessage('Username cannot be blank')
+        }
     }
 
     const handleCreateProfile = (e: any) => {
