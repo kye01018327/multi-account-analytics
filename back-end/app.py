@@ -26,16 +26,16 @@ db = Database(
 #     # If profile does not exist, return JSON with null
 #     # If profile exists, return JSON with content
 
-@app.route('/profiles', methods=['GET'])
-def get_profile():
+@app.route('/profiles/<username>', methods=['GET'])
+def get_profile(username):
     # Check if profile exists
     db.cur.execute(
-        '''SELECT * FROM users
-        WHERE user_id = "test"'''
+        '''
+        SELECT * FROM users
+        WHERE username = %s
+        ''', (username,)
     )
-    if db.cur.fetchall():
-        return True
-    return False
+    return db.cur.fetchall()
     # If profile does not exist, return JSON with null
     # If profile exists, return JSON with content
 
