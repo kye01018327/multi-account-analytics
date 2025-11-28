@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router'
 
 
@@ -17,12 +18,17 @@ function Title() {
 }
 
 function ProfileForm() {
+    const [username, setUsername] = useState('')
     let navigate = useNavigate()
+
+    const handleSubmit = (e: any) => {
+        e.preventDefault()
+        navigate(`/profile/${username}`)
+    }
+
     return (
-        <form onSubmit={(e) => {
-            e.preventDefault
-            navigate('profile')}}>
-            <input name='Username' placeholder='Username'/>
+        <form onSubmit={handleSubmit}>
+            <input onChange={(e) => {setUsername(e.target.value)}} name='Username' placeholder='Username'/>
             <button type='submit'>View Profile</button>
             <button type='submit'>Create Profile</button>
         </form>
