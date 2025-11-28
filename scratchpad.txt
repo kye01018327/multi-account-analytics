@@ -1,0 +1,8 @@
+get profile function app.py
+
+Check if profile exists
+    Check by taking username and querying SQL database for it
+If profile does not exist, return JSON with null values
+If profile exists, return JSON with content
+
+The checks are done by seeing whether the tables have tuples in them or not
