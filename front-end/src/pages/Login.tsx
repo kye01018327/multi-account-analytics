@@ -28,7 +28,9 @@ function ProfileForm() {
 
     return (
         <form onSubmit={handleSubmit}>
-            <input onChange={(e) => {setUsername(e.target.value)}} name='Username' placeholder='Username'/>
+            <input onChange={(e) => {
+                setUsername(e.target.value)}
+            } name='Username' placeholder='Username'/>
             <button type='submit'>View Profile</button>
             <button type='submit'>Create Profile</button>
         </form>
