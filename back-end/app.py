@@ -1,10 +1,13 @@
 from flask import request, Flask
 from utils import Database
 import os
+from flask_cors import CORS
+
 
 env = os.environ
 
 app = Flask(__name__)
+CORS(app, origins=[env['REACT_ADDR']])
 
 db = Database(
     env['DB_NAME'], 
