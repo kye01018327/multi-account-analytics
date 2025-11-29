@@ -26,7 +26,6 @@ function ProfileForm() {
         e.preventDefault()
         if (username != '') {
             // Check if profile exists
-            
             // Navigate to 
             navigate(`/profile/${username}`)
         }
