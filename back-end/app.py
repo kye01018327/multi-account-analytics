@@ -1,4 +1,4 @@
-from flask import request, Flask
+from flask import request, Flask, abort, jsonify
 from utils import Database
 import os
 from flask_cors import CORS
@@ -17,25 +17,28 @@ db = Database(
     env['DB_PORT'])
 
 
-@app.route('/profiles/<username>', methods=['GET'])
-def get_profile(username):
+@app.route('/profiles', methods=['POST'])
+def create_profile():
+    pass
+
+
+@app.route('/profiles/<profile_name>')
+def get_profile(profile_name):
     # Check if profile exists
     db.cur.execute(
         '''
-        SELECT * FROM users
-        WHERE username = %s
-        ''', (username,)
+        SELECT * FROM profiles
+        WHERE profile_name = %s
+        ''', (profile_name,)
     )
-    return db.cur.fetchall()
+    data = db.cur.fetchall()
+    if not data:
+        abort(404)
+    return jsonify(data[0])
     # If profile does not exist, return JSON with null
     # If profile exists, return JSON with content
 
-
-
-@app.route('/profiles', methods=['POST'])
-def create_profile():
-    
+@app.route('/profiles/<username>/mastery')
+def get_profile_champion_mastery(username):
     pass
-
-# update profile
 

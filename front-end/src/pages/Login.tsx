@@ -18,31 +18,31 @@ function Title() {
 }
 
 function ProfileForm() {
-    const [username, setUsername] = useState('')
+    const [profilename, setProfilename] = useState('')
     const [message, setMessage] = useState('')
     let navigate = useNavigate()
 
     async function handleViewProfile(e: any) {
         e.preventDefault()
-        if (username != '') {
-            // Check if profile exists
-            try {
-                const res = await fetch(`http://127.0.0.1:5000/profiles/${username}`)
-                const data = await res.json()
-                if (!data[0]) {
-                    navigate(`/profile/${username}`)
-                }
-            } finally {}
+        if (profilename == '') {
+            setMessage('Profile name cannot be blank')
+            return
         }
-        else {
-            setMessage('Username cannot be blank')
+        const res = await fetch(`http://127.0.0.1:5000/profiles/${profilename}`)
+        if (res.status == 404) {
+            setMessage('Profile does not exist')
+            return
+        }
+        const data = await res.json()
+        if (data[0] != '') {
+            navigate(`/profile/${profilename}`)
         }
     }
 
     const handleCreateProfile = (e: any) => {
         e.preventDefault()
         setMessage('Profile creation currently WIP')
-        if (username != '') {
+        if (profilename != '') {
             // Profile Creation functionality
         }
     }
@@ -50,7 +50,7 @@ function ProfileForm() {
     return (
         <>
             <input onChange={(e) => {
-                setUsername(e.target.value)}
+                setProfilename(e.target.value)}
             } name='Username' placeholder='Username'/>
 
             <button onClick={handleViewProfile}>View Profile</button>

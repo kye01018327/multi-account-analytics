@@ -1,8 +1,10 @@
-get profile function app.py
+DATABASE OPERATIONS
 
-Check if profile exists
-    Check by taking username and querying SQL database for it
-If profile does not exist, return JSON with null values
-If profile exists, return JSON with content
+1. System allows users to create a profile
+2. System allows users to see profiles
+3. System allows users to refresh profiles to latest data
 
-The checks are done by seeing whether the tables have tuples in them or not
+4. System allows users to link LoL accounts to profile
+5. System allows uers to remove LoL accounts from profile
+
+6. System calculates Champion Mastery
