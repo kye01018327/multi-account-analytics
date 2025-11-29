@@ -3,9 +3,18 @@ import { useNavigate, useParams } from 'react-router'
 
 
 function Profile() {
+    return (
+        <>
+            <ProfileName/>
+            <LogOutButton/>
+        </>
+    )
+}
+
+
+function ProfileName() {
     const [profilename, setProfilename] = useState('')
     const { param } = useParams()
-    let navigate = useNavigate()
     useEffect(() => {
         async function fetchData() {
             const res = await fetch(`http://127.0.0.1:5000/profiles/${param}`)
@@ -18,11 +27,17 @@ function Profile() {
         }
         fetchData()
     }, [])
+
     return (
-        <>
-            <div>Hello, { profilename }</div>
-            <button onClick={() => {navigate('/')}}>Log Out</button>
-        </>
+        <div>{ profilename }</div>
+    )
+}
+
+
+function LogOutButton() {
+    let navigate = useNavigate()
+    return (
+        <button onClick={() => {navigate('/')}}>Log Out</button>
     )
 }
 
