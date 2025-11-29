@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react"
+import { useNavigate } from "react-router"
 
 
 export default function Accounts() {
     return (
         <>
             <ManageAccountsForm/>
+            <GoBackButton/>
             <DisplayAccounts/>
         </>
     )
@@ -67,5 +69,12 @@ function DisplayAccounts() {
                 ))}
             </ul>
         </>
+    )
+}
+
+function GoBackButton() {
+    const navigate = useNavigate()
+    return (
+        <button onClick={() => navigate('/')}>Go back</button>
     )
 }
