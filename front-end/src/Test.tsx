@@ -7,7 +7,6 @@ export default function Test() {
         async function loadData() {
             try {
                 const res = await fetch('http://127.0.0.1:5000/profiles/test')
-                console.log(res)
                 const data = await res.json()
                 setData(data)
             } finally {

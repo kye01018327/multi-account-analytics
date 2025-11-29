@@ -22,12 +22,17 @@ function ProfileForm() {
     const [message, setMessage] = useState('')
     let navigate = useNavigate()
 
-    const handleViewProfile = (e: any) => {
+    async function handleViewProfile(e: any) {
         e.preventDefault()
         if (username != '') {
             // Check if profile exists
-            // Navigate to 
-            navigate(`/profile/${username}`)
+            try {
+                const res = await fetch(`http://127.0.0.1:5000/profiles/${username}`)
+                const data = await res.json()
+                if (!data[0]) {
+                    navigate(`/profile/${username}`)
+                }
+            } finally {}
         }
         else {
             setMessage('Username cannot be blank')
