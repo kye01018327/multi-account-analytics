@@ -1,7 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import Login from './pages/Login'
 import Profile from './pages/Profile'
-import Test from './Test'
+import Accounts from './pages/Accounts'
 
 
 
@@ -10,7 +10,7 @@ function App() {
         <Routes>
             <Route index element={<Login/>}/>
             <Route path='/profile/:profileName' element={<Profile/>}/>
-            <Route path='/test' element={<Test/>}/>
+            <Route path='/accounts' element={<Accounts/>}/>
         </Routes>
     )
 }

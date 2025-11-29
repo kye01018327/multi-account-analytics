@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router'
 
 
@@ -47,6 +47,11 @@ function ProfileForm() {
         }
     }
 
+    function handleViewAccounts(e: any) {
+        e.preventDefault()
+        navigate('/accounts')
+    }
+
     return (
         <>
             <input onChange={(e) => {
@@ -55,6 +60,7 @@ function ProfileForm() {
 
             <button onClick={handleViewProfile}>View Profile</button>
             <button onClick={handleCreateProfile}>Create Profile</button>
+            <button onClick={handleViewAccounts}>View Accounts</button>
             <div>{message}</div>
         </>
     )

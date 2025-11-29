@@ -77,8 +77,13 @@ def view_all_accounts():
         'SELECT * FROM accounts'
     )
     result = db.fetchall()
-    print(result)
-    return jsonify(result)
+    account_names_only = []
+    for account in result:
+        game_name = account[2]
+        tag_line = account[3]
+        account_name = game_name + '#' + tag_line
+        account_names_only.append(account_name)
+    return jsonify(account_names_only)
 
 
 def fetch_lol_account(game_name: str, tag_line: str):
