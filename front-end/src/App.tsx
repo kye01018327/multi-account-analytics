@@ -9,7 +9,7 @@ function App() {
     return (
         <Routes>
             <Route index element={<Login/>}/>
-            <Route path='/profile/:param' element={<Profile/>}/>
+            <Route path='/profile/:profileName' element={<Profile/>}/>
             <Route path='/test' element={<Test/>}/>
         </Routes>
     )

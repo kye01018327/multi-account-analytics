@@ -1,10 +1,24 @@
 DATABASE OPERATIONS
 
-1. System allows users to create a profile
-2. System allows users to see profiles
-3. System allows users to refresh profiles to latest data
+System allows users to see profiles
+System allows users to refresh profiles to latest data
 
-4. System allows users to link LoL accounts to profile
-5. System allows uers to remove LoL accounts from profile
+System allows users to add LoL account to profile
+System allows users to remove LoL account from profile
 
-6. System calculates Champion Mastery
+
+System allows uers to see profiles:
+Profiles list gameName and tagLine of accounts
+    Construct a GET route which takes the profile name from the URL
+    It shall output a JSON in the from
+    {
+        'gameName'
+        'puuid'
+        'tagLine'
+    }
+
+Add account to accounts table.
+dont add account if it exists already
+
+kevin22703307064#NA1
+markzuckerberg68#TEEMO

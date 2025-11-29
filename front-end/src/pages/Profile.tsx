@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
 
@@ -7,6 +7,7 @@ function Profile() {
         <>
             <ProfileName/>
             <ManageAccountsForm/>
+            <DisplayAccounts/>
             <LogOutButton/>
         </>
     )
@@ -14,42 +15,42 @@ function Profile() {
 
 
 function ProfileName() {
-    const [profilename, setProfilename] = useState('')
-    const { param } = useParams()
+    const [name, setName] = useState('')
+    const { profileName } = useParams()
     useEffect(() => {
         async function fetchData() {
-            const res = await fetch(`http://127.0.0.1:5000/profiles/${param}`)
+            const res = await fetch(`http://127.0.0.1:5000/profiles/${profileName}`)
             if (!res.ok) {
-                setProfilename('ERROR')
+                setName('ERROR')
                 return
             }
             const data = await res.json()
-            setProfilename(data)
+            setName(data)
         }
         fetchData()
     }, [])
 
     return (
-        <div>{ profilename }</div>
+        <div>{ name }</div>
     )
 }
 
 
 function ManageAccountsForm() {
-    const [account, setAccount] = useState('')
+    const {profileName} = useParams()
+    const [accountName, setAccountName] = useState('')
 
     async function handleAddAccount() {
-        const data = {account}
-        const res = await fetch('http://127.0.0.1:5000/accounts', {
+        const data = {profileName, accountName}
+        console.log(data)
+        const res = await fetch('http://127.0.0.1:5000/add_account', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(data)
         })
-        console.log(data)
         const result = await res.json()
         console.log(result)
+
     }
 
     async function handleRemoveAccount() {
@@ -57,10 +58,16 @@ function ManageAccountsForm() {
     }
     return (
         <>
-            <input placeholder='Account' onChange={(e) => {setAccount(e.target.value)}}/>
+            <input placeholder='Account' onChange={(e) => {setAccountName(e.target.value)}}/>
             <button onClick={handleAddAccount}>Add Account</button>
             <button onClick={handleRemoveAccount}>Remove Account</button>
         </>
+    )
+}
+
+function DisplayAccounts() {
+    return (
+        <></>
     )
 }
 
