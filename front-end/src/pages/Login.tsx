@@ -29,7 +29,7 @@ function ProfileForm() {
             return
         }
         const res = await fetch(`http://127.0.0.1:5000/profiles/${profilename}`)
-        if (res.status == 404) {
+        if (!res.ok) {
             setMessage('Profile does not exist')
             return
         }
