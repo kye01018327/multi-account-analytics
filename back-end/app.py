@@ -57,7 +57,7 @@ def add_account():
             return jsonify({'status': 'success', 'message': 'account already exists'}), 200
         db.query(
             '''
-            INSERT INTO accounts VALUES (%s, %s, %s)
+            INSERT INTO accounts (puuid, gameName, tagLine) VALUES (%s, %s, %s)
             ''', (d['puuid'], d['gameName'], d['tagLine'])
         )
 
@@ -81,30 +81,6 @@ def view_all_accounts():
     return jsonify(result)
 
 
-def add_account(game_name: str, tag_line: str):
-    # Check if account is already added
-    db.query(
-        '''
-        SELECT * FROM accounts WHERE gameName = %s AND tagLine = %s
-        ''', (game_name, tag_line)
-    )
-    result = db.fetchall()
-    if result:
-        return True
-    # Check if account valid
-    res = fetch_lol_account(game_name, tag_line)
-    data = res.json()
-    if not res.ok:
-        return False
-    # If acount is valid add account to database
-    db.query(
-        '''
-        INSERT INTO accounts VALUES (%s, %s, %s)
-        ''', (data['gameName'], data['puuid'], data['tagLine'])
-    )
-    return True
-
-
 def fetch_lol_account(game_name: str, tag_line: str):
     url = f'https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{game_name + '/' + tag_line}'
     headers = {"X-Riot-Token": env['RIOT_API_KEY']}
@@ -117,14 +93,3 @@ def link_account():
     # {profileName, accountName}
     # Check if account is already linked
     pass
-
-
-@app.route('/test/add_account', methods=['POST'])
-def test_add_account():
-    data = request.json()
-    game_name, _, tag_line = data['accountName'].partition('#')
-    result = add_account(game_name, tag_line)
-    if result:
-        return '', 204
-    return 400
-    
