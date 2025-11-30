@@ -167,7 +167,35 @@ def link_account_route():
         add_account(game_name, tag_line)
         # Then add profile_account row in db table
         return link_account_to_profile(data['profileName'], game_name, tag_line)
-        
+
+
+@app.route('/unlink_account', methods=['POST'])
+def unlink_account_route():
+    # {'profileName', 'accountName'}
+    data = request.json
+    game_name, _, tag_line = data['accountName'].partition('#')
+    # Check if account is linked exists
+    db.query(
+        '''
+        SELECT * FROM (SELECT * FROM profiles
+        JOIN profile_account ON profiles.profile_id = profile_account.profile_id
+        JOIN accounts ON profile_account.account_id = accounts.account_id)
+        WHERE profile_name = %s AND gamename = %s AND tagline = %s
+        ''', (data['profileName'], game_name, tag_line)
+    )
+    result = db.fetchall()
+    # If account is not linked, do nothing
+    if not result:
+        return jsonify({'status': 'success', 'message': 'nothing to unlink'}), 200
+    # Else unlink
+    db.query(
+        '''
+        DELETE FROM profile_account WHERE
+        profile_id = (SELECT profile_id FROM profiles WHERE profile_name = %s) AND
+        account_id = (SELECT account_id FROM accounts WHERE gamename = %s AND tagline = %s)
+        ''', (data['profileName'], game_name, tag_line)
+    )
+    return jsonify({'status': 'success', 'message': 'unlinked account'}), 200
 
 
 @app.route('/allaccounts')
