@@ -15,6 +15,8 @@ export default function Accounts() {
 
 function ManageAccountsForm() {
     const [accountName, setAccountName] = useState('')
+    const [debugMsg, setDebugMsg] = useState('')
+    
 
     async function handleAddAccount() {
         const data = {accountName}
@@ -25,8 +27,8 @@ function ManageAccountsForm() {
             body: JSON.stringify(data)
         })
         const result = await res.json()
-        console.log(result)
-
+        setDebugMsg(result['message'])
+        console.log(debugMsg)
     }
 
     async function handleRemoveAccount() {
@@ -37,6 +39,9 @@ function ManageAccountsForm() {
             <input placeholder='Account' onChange={(e) => {setAccountName(e.target.value)}}/>
             <button onClick={handleAddAccount}>Add Account</button>
             <button onClick={handleRemoveAccount}>Remove Account</button>
+            <br/>
+            {debugMsg}
+            <br/>
         </>
     )
 }
