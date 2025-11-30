@@ -40,10 +40,10 @@ function ManageAccountsForm() {
     const {profileName} = useParams()
     const [accountName, setAccountName] = useState('')
 
-    async function handleAddAccount() {
+    async function handleLinkAccount() {
         const data = {profileName, accountName}
         console.log(data)
-        const res = await fetch('http://127.0.0.1:5000/add_account', {
+        const res = await fetch('http://127.0.0.1:5000/link_account', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(data)
@@ -53,14 +53,14 @@ function ManageAccountsForm() {
 
     }
 
-    async function handleRemoveAccount() {
+    async function handleUnlinkAccount() {
 
     }
     return (
         <>
             <input placeholder='Account' onChange={(e) => {setAccountName(e.target.value)}}/>
-            <button onClick={handleAddAccount}>Add Account</button>
-            <button onClick={handleRemoveAccount}>Remove Account</button>
+            <button onClick={handleLinkAccount}>Link Account</button>
+            <button onClick={handleUnlinkAccount}>Unlink Account</button>
         </>
     )
 }
