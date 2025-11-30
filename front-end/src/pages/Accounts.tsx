@@ -24,7 +24,6 @@ function ManageAccountsForm() {
             return
         }
         const data = {accountName}
-        console.log(data)
         const res = await fetch('http://127.0.0.1:5000/add_account', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -32,7 +31,6 @@ function ManageAccountsForm() {
         })
         const result = await res.json()
         setDebugMsg(result['message'])
-        console.log(debugMsg)
     }
 
     async function handleRemoveAccount() {
@@ -48,7 +46,6 @@ function ManageAccountsForm() {
         })
         const result = await res.json()
         setDebugMsg(result['message'])
-        console.log(debugMsg)
 
     }
     return (
@@ -71,7 +68,6 @@ function DisplayAccounts() {
             const res = await fetch(`http://127.0.0.1:5000/allaccounts`)
             const result = await res.json()
             setAccounts(result)
-            console.log(accounts)
         }
         getAccounts()
     }, [update])
