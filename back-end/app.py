@@ -62,7 +62,7 @@ def get_profile(profile_name):
 
 
 @app.route('/add_account', methods=['POST'])
-def add_account():
+def add_account_route():
     data = request.json
     game_name, _, tag_line = data['accountName'].partition('#')
     return add_account(game_name, tag_line)
