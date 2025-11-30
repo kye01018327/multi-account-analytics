@@ -45,11 +45,14 @@ def get_profile(profile_name):
 def add_account():
     data = request.json
     game_name, _, tag_line = data['accountName'].partition('#')
+    return add_account(game_name, tag_line)
+
+
+def add_account(game_name, tag_line):
     res = fetch_lol_account(game_name, tag_line)
     if not res.ok:
         return jsonify({'status': 'failure', 'message': 'error, invalid account'}), 400
     d = res.json()
-    print(d)
     if res.ok:
         # Check if puuid exists
         db.query(
@@ -76,6 +79,7 @@ def add_account():
         result = db.fetchall()
         print(result)
         return jsonify({'status': 'success', 'message': 'account added'}), 200
+
 
 
 def check_account_exists_in_db(game_name, tag_line):
@@ -113,9 +117,18 @@ def link_account_route():
     exists = True if result else False
     if exists:
         # Add profile_account row in db table
-        pass
+        db.query(
+            '''
+            INSERT INTO profile_account VALUES (
+                SELECT profile_id FROM profiles WHERE profile_name = %s,
+                SELECT account_id FROM accounts WHERE gamename = %s AND tagline = %s
+            )
+            ''', (data['profileName'], game_name, tag_line)
+        )
+        return jsonify({'status': 'success', 'message': 'added account to profile'}), 200
     elif not exists:
         # Add account to database
+
         # Then add profile_account row in db table
         pass
 
