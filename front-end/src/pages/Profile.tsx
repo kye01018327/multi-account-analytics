@@ -2,21 +2,13 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
 
-function Profile() {
-    return (
-        <>
-            <ProfileName/>
-            <ManageAccountsForm/>
-            <DisplayAccounts/>
-            <LogOutButton/>
-        </>
-    )
-}
-
-
-function ProfileName() {
+export default function Profile() {
+    let navigate = useNavigate()
     const [name, setName] = useState('')
     const { profileName } = useParams()
+    const [accounts, setAccounts] = useState([])
+    const [update, setUpdate] = useState(true)
+    const [accountName, setAccountName] = useState('')
     useEffect(() => {
         async function fetchData() {
             const res = await fetch(`http://127.0.0.1:5000/profiles/${profileName}`)
@@ -24,21 +16,12 @@ function ProfileName() {
                 setName('ERROR')
                 return
             }
-            const data = await res.json()
-            setName(data)
+            const d = await res.json()
+            setName(d['profile_name'])
+            setAccounts(d['accounts'])
         }
         fetchData()
-    }, [])
-
-    return (
-        <div>{ name }</div>
-    )
-}
-
-
-function ManageAccountsForm() {
-    const {profileName} = useParams()
-    const [accountName, setAccountName] = useState('')
+    }, [update])
 
     async function handleLinkAccount() {
         const data = {profileName, accountName}
@@ -54,29 +37,33 @@ function ManageAccountsForm() {
     }
 
     async function handleUnlinkAccount() {
-
+        
     }
     return (
         <>
+            {/* Profile Name */}
+            <div>{ name }</div>
+
+            {/* Link / Unlink Accounts feature */}
             <input placeholder='Account' onChange={(e) => {setAccountName(e.target.value)}}/>
             <button onClick={handleLinkAccount}>Link Account</button>
             <button onClick={handleUnlinkAccount}>Unlink Account</button>
+
+            {/* Logout Button */}
+            <button onClick={() => {navigate('/')}}>Log Out</button>
+            
+            <br/>
+            <br/>
+
+            {/* Display Linked Accounts */}
+            <button onClick={() => {setUpdate(!update)}}>Update</button>
+            <ul>
+                {accounts.map((account: any, index: any) => (
+                    <li key={index}>
+                        {account}
+                    </li>
+                ))}
+            </ul>
         </>
     )
 }
-
-function DisplayAccounts() {
-    return (
-        <></>
-    )
-}
-
-
-function LogOutButton() {
-    let navigate = useNavigate()
-    return (
-        <button onClick={() => {navigate('/')}}>Log Out</button>
-    )
-}
-
-export default Profile
