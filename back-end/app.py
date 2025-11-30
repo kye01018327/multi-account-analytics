@@ -40,6 +40,7 @@ def get_profile(profile_name):
     # If profile does not exist, return JSON with null
     # If profile exists, return JSON with content
 
+
 @app.route('/add_account', methods=['POST'])
 def add_account():
     data = request.json
@@ -77,16 +78,20 @@ def add_account():
         return jsonify({'status': 'success', 'message': 'account added'}), 200
 
 
-@app.route('/remove_account', methods=['POST'])
-def remove_account():
-    data = request.json
-    game_name, _, tag_line = data['accountName'].partition('#')
+def check_account_exists_in_db(game_name, tag_line):
     db.query(
         '''
         SELECT * FROM accounts WHERE gamename = %s AND tagline = %s 
         ''', (game_name, tag_line)
     )
-    result = db.fetchall()
+    return db.fetchall()
+
+
+@app.route('/remove_account', methods=['POST'])
+def remove_account():
+    data = request.json
+    game_name, _, tag_line = data['accountName'].partition('#')
+    result = check_account_exists_in_db(game_name, tag_line)
     if not result:
         return jsonify({'status': 'success', 'message': 'cannot remove, account does not exist'}), 200
     # Else remove account
@@ -97,6 +102,22 @@ def remove_account():
         ''', (game_name, tag_line)
     )
     return jsonify({'status': 'success', 'message': 'account removed from database'}), 200
+
+
+@app.route('/link_account')
+def link_account():
+    # {'profileName', 'accountName'}
+    data = request.json
+    game_name, _, tag_line = data['accountName'].partition('#')
+    result = check_account_exists_in_db(game_name, tag_line)
+    exists = True if result else False
+    if exists:
+        # Add profile_account row in db table
+        pass
+    elif not exists:
+        # Add account to database
+        # Then add profile_account row in db table
+        pass
 
 
 @app.route('/allaccounts')
