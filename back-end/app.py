@@ -108,7 +108,32 @@ def remove_account():
     return jsonify({'status': 'success', 'message': 'account removed from database'}), 200
 
 
-@app.route('/link_account')
+def link_account_to_profile(profile_name, game_name, tag_line):
+    # Check if already linked
+    db.query(
+        '''
+        (SELECT * FROM profile_account 
+        WHERE profile_id = (SELECT profile_id FROM profiles WHERE profile_name = %s) 
+        AND account_id = 
+        (SELECT account_id FROM accounts WHERE gamename = %s and tagline = %s))
+        ''', (profile_name, game_name, tag_line)
+    )
+    if db.fetchall():
+       return jsonify({'status': 'success', 'message': 'account already linked'}), 200 
+
+    # If not linked, add profile_account row in db table
+    db.query(
+        '''
+        INSERT INTO profile_account VALUES (
+            (SELECT profile_id FROM profiles WHERE profile_name = %s),
+            (SELECT account_id FROM accounts WHERE gamename = %s AND tagline = %s)
+        )
+        ''', (profile_name, game_name, tag_line)
+    )
+    return jsonify({'status': 'success', 'message': 'added account to profile'}), 200
+
+
+@app.route('/link_account', methods=['POST'])
 def link_account_route():
     # {'profileName', 'accountName'}
     data = request.json
@@ -116,21 +141,13 @@ def link_account_route():
     result = check_account_exists_in_db(game_name, tag_line)
     exists = True if result else False
     if exists:
-        # Add profile_account row in db table
-        db.query(
-            '''
-            INSERT INTO profile_account VALUES (
-                SELECT profile_id FROM profiles WHERE profile_name = %s,
-                SELECT account_id FROM accounts WHERE gamename = %s AND tagline = %s
-            )
-            ''', (data['profileName'], game_name, tag_line)
-        )
-        return jsonify({'status': 'success', 'message': 'added account to profile'}), 200
+        return link_account_to_profile(data['profileName'], game_name, tag_line)
     elif not exists:
         # Add account to database
-
+        add_account(game_name, tag_line)
         # Then add profile_account row in db table
-        pass
+        return link_account_to_profile(data['profileName'], game_name, tag_line)
+        
 
 
 @app.route('/allaccounts')
@@ -153,10 +170,3 @@ def fetch_lol_account(game_name: str, tag_line: str):
     headers = {"X-Riot-Token": env['RIOT_API_KEY']}
     res = requests.get(url, headers=headers)
     return res
-
-
-@app.route('/profiles/link_account', methods=['POST'])
-def link_account():
-    # {profileName, accountName}
-    # Check if account is already linked
-    pass
