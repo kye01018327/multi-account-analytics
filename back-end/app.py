@@ -18,6 +18,11 @@ db = Database(
     env['DB_PORT'])
 
 
+@app.route('/')
+def test_message():
+    return jsonify({'status': 'success', 'message': 'server is running'}), 200
+
+
 @app.route('/profiles/<profile_name>')
 def get_profile(profile_name):
     # Check if profile exists
@@ -41,7 +46,7 @@ def add_account():
     game_name, _, tag_line = data['accountName'].partition('#')
     res = fetch_lol_account(game_name, tag_line)
     if not res.ok:
-        return 'Invalid Input', 400
+        return jsonify({'status': 'failure', 'message': 'error, invalid account'}), 400
     d = res.json()
     print(d)
     if res.ok:
