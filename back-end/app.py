@@ -105,7 +105,7 @@ def remove_account():
 
 
 @app.route('/link_account')
-def link_account():
+def link_account_route():
     # {'profileName', 'accountName'}
     data = request.json
     game_name, _, tag_line = data['accountName'].partition('#')
