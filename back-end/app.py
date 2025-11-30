@@ -76,6 +76,29 @@ def add_account():
         print(result)
         return jsonify({'status': 'success', 'message': 'account added'}), 200
 
+
+@app.route('/remove_account', methods=['POST'])
+def remove_account():
+    data = request.json
+    game_name, _, tag_line = data['accountName'].partition('#')
+    db.query(
+        '''
+        SELECT * FROM accounts WHERE gamename = %s AND tagline = %s 
+        ''', (game_name, tag_line)
+    )
+    result = db.fetchall()
+    if not result:
+        return jsonify({'status': 'success', 'message': 'cannot remove, account does not exist'}), 200
+    # Else remove account
+    db.query(
+        '''
+        DELETE FROM accounts
+        WHERE gamename = %s AND tagline = %s
+        ''', (game_name, tag_line)
+    )
+    return jsonify({'status': 'success', 'message': 'account removed from database'}), 200
+
+
 @app.route('/allaccounts')
 def view_all_accounts():
     db.query(

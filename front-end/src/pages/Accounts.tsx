@@ -36,6 +36,19 @@ function ManageAccountsForm() {
     }
 
     async function handleRemoveAccount() {
+        if (accountName == '') {
+            setDebugMsg('account name cannot be blank')
+            return
+        }
+        const data = {accountName}
+        const res = await fetch('http://127.0.0.1:5000/remove_account', {
+            method: 'POST',
+            headers: {'Content-Type' : 'application/json'},
+            body: JSON.stringify(data)
+        })
+        const result = await res.json()
+        setDebugMsg(result['message'])
+        console.log(debugMsg)
 
     }
     return (
