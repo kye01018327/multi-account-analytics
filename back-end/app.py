@@ -25,6 +25,7 @@ def test_message():
 
 @app.route('/profiles/<profile_name>')
 def get_profile(profile_name):
+    out = {}
     # Check if profile exists
     db.query(
         '''
@@ -35,8 +36,27 @@ def get_profile(profile_name):
     data = db.fetchall()
     if not data:
         abort(404)
-    profile_name = data[0]
-    return jsonify(profile_name)
+    out['profile_id'] = data[0][0]
+    out['profile_name'] = data[0][1]
+    # Get linked accounts
+    db.query(
+        '''
+        SELECT c.account_id, c.gamename, c.tagline FROM accounts AS c
+        JOIN
+        (SELECT * FROM
+        (SELECT * FROM profiles AS a
+        JOIN
+        profile_account AS b on a.profile_id = b.profile_id)
+        WHERE profile_name = %s) AS d
+        ON c.account_id = d.account_id
+        ''', (profile_name,)
+    )
+    data = db.fetchall()
+    out['accounts'] = []
+    for account in data:
+        out['accounts'].append(account[1] + '#' + account[2])
+    print(out)
+    return jsonify(out)
     # If profile does not exist, return JSON with null
     # If profile exists, return JSON with content
 
