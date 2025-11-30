@@ -19,6 +19,10 @@ function ManageAccountsForm() {
     
 
     async function handleAddAccount() {
+        if (accountName == '') {
+            setDebugMsg('account name cannot be blank')
+            return
+        }
         const data = {accountName}
         console.log(data)
         const res = await fetch('http://127.0.0.1:5000/add_account', {
