@@ -14,3 +14,4 @@ class Database:
         self.cur = self.conn.cursor()
         self.query = self.cur.execute
         self.fetchall = self.cur.fetchall
+        self.fetchone = self.cur.fetchone

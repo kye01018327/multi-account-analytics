@@ -34,9 +34,14 @@ def fetch_profile_db(profile_name: str):
     return rows
 
 
-def profile_exists_in_db(rows: list[tuple]) -> bool:
-    exists = True if rows else False
-    return exists
+def profile_exists_in_db(profile_name: str) -> bool:
+    db.query(
+        '''
+        SELECT EXISTS (SELECT * FROM profiles
+        WHERE profile_name = %s)
+        ''', (profile_name,)
+    )
+    return db.fetchone()[0]
 
 
 def fetch_accounts_linked_to_profile(profile_name) -> list[str]:
@@ -60,10 +65,10 @@ def fetch_accounts_linked_to_profile(profile_name) -> list[str]:
 def get_profile_route(profile_name):
     d = {}
     # Check if profile exists
-    rows = fetch_profile_db(profile_name)
-    exists = profile_exists_in_db(rows)
+    exists = profile_exists_in_db(profile_name)
     if not exists:
         abort(404)
+    rows = fetch_profile_db(profile_name)
     d['profile_id'] = rows[0][0]
     d['profile_name'] = rows[0][1]
     # Get linked accounts
@@ -83,6 +88,8 @@ def fetch_puuid_riot(game_name: str, tag_line: str):
     url = f'https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{game_name}/{tag_line}'
     headers = {"X-Riot-Token": env['RIOT_API_KEY']}
     res = requests.get(url, headers=headers)
+    if not res.ok:
+        return None
     d = res.json()
     puuid = d['puuid']
     return puuid
@@ -102,7 +109,7 @@ def entry_exists(input: str):
     return True if input else False
 
 
-def add_account(game_name, tag_line):
+def add_account_db(game_name, tag_line):
     # Check if puuid exists
     row = fetch_account(game_name, tag_line)
     exists = entry_exists(row)
@@ -110,18 +117,17 @@ def add_account(game_name, tag_line):
         return jsonify({'status': 'success', 'message': 'account already exists'}), 200
     # Else add account to database
     # Check if account name is valid
-    res = fetch_puuid_riot(game_name, tag_line)
-    if not res.ok:
+    puuid = fetch_puuid_riot(game_name, tag_line)
+    if puuid is None:
         return jsonify({'status': 'failure', 'message': 'error, invalid account name'}), 400
-    d = res.json()
-    add_account_to_db(d['puuid'], d['gameName'], d['tagLine'])
+    add_account_to_db(puuid, game_name, tag_line)
     return jsonify({'status': 'success', 'message': 'account added'}), 200
 
 
 @app.route('/add_account', methods=['POST'])
 def add_account_route():
     d = request.json
-    return add_account(d['gameName'], d['tagLine'])
+    return add_account_db(d['gameName'], d['tagLine'])
 
 
 def remove_account_from_db(game_name: str, tag_line: str) -> None:
@@ -148,15 +154,13 @@ def remove_account_route():
 def account_linked_to_profile(profile_name: str, game_name: str, tag_line: str) -> bool:
     db.query(
         '''
-        (SELECT * FROM profile_account_link 
+        SELECT EXISTS ((SELECT * FROM profile_account_link 
         WHERE profile_id = (SELECT profile_id FROM profiles WHERE profile_name = %s) 
         AND account_id = 
-        (SELECT account_id FROM accounts WHERE game_name = %s and tag_line = %s))
+        (SELECT account_id FROM accounts WHERE game_name = %s and tag_line = %s)))
         ''', (profile_name, game_name, tag_line)
     )
-    rows = db.fetchall()
-    exists = True if rows else False
-    return exists
+    return db.fetchone()[0]
 
 
 def add_profile_account_link(profile_name: str, game_name: str, tag_line: str) -> None:
@@ -192,7 +196,7 @@ def link_account_route():
         return link_account_to_profile(d['profileName'], d['gameName'], d['tagLine'])
     elif not exists:
         # Add account to database
-        add_account(d['gameName'], d['tagLine'])
+        add_account_db(d['gameName'], d['tagLine'])
         # Then add profile_account_link row in db table
         return link_account_to_profile(d['profileName'], d['gameName'], d['tagLine'])
 
@@ -253,6 +257,7 @@ def view_all_accounts():
     account_names = fetch_all_account_names()
     return jsonify(account_names)
 
+
 def fetch_puuid_db(game_name: str, tag_line: str) -> str:
     # Check if account exists in db
     # If exists, fetch puuid from db
@@ -277,7 +282,6 @@ def fetch_puuid_db(game_name: str, tag_line: str) -> str:
 @app.route('/test')
 def test():
     puuid = fetch_puuid('kevin22703307064', 'NA1')
-    print(puuid)
     return jsonify('test')
 
 
@@ -311,7 +315,6 @@ def fetch_account_total_mastery_riot(game_name: str, tag_line: str) -> int:
     # Given the gameName and tagLine of a North American account, return all the champion masteries of that account
     # Get puuid
     puuid = fetch_puuid(game_name, tag_line)
-    # print(puuid)
     url = f'https://na1.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/{puuid}'
     headers = {'X-Riot-Token': env['RIOT_API_KEY']}
     res = requests.get(url, headers=headers)
@@ -322,8 +325,99 @@ def fetch_account_total_mastery_riot(game_name: str, tag_line: str) -> int:
     return total_champion_mastery_score
 
 
-@app.route('/fetch_account_total_mastery', methods=['GET'])
-def fetch_account_total_mastery_route():
+def fetch_profile_id(profile_name: str) -> int:
+    db.query(
+        '''
+        SELECT profile_id FROM profiles
+        WHERE profile_name = %s
+        ''', (profile_name,)
+    )
+    profile_id = db.fetchone()[0]
+    return profile_id
+
+
+def account_exists_db(game_name: str, tag_line: str) -> bool:
+    db.query(
+        '''
+        SELECT EXISTS (SELECT 1 FROM accounts WHERE game_name = %s AND tag_line = %s)
+        ''', (game_name, tag_line)
+    )
+    return db.fetchone()[0]
+
+
+def query_fetch_account_id(game_name: str, tag_line: str) -> int:
+    db.query(
+        '''
+        SELECT account_id FROM accounts
+        WHERE game_name = %s AND tag_line = %s
+        ''', (game_name, tag_line)
+    )
+    result = db.fetchone()
+    return result[0] if result else None
+
+
+def fetch_account_id(game_name: str, tag_line: str) -> int:
+    if not account_exists_db(game_name, tag_line):
+        add_account_db(game_name, tag_line)
+    account_id = query_fetch_account_id(game_name, tag_line)
+    return account_id
+
+
+def fetch_account_total_mastery_db(account_id: int) -> int:
+    db.query(
+        '''
+        SELECT total_mastery FROM account_total_masteries
+        WHERE account_id = %s
+        ''', (account_id,)
+    )
+    result = db.fetchone()
+    return result[0] if result else None
+
+
+def account_total_mastery_exists(account_id: int) -> bool:
+    db.query(
+        '''
+        SELECT EXISTS(
+            SELECT 1 FROM account_total_masteries
+            WHERE account_id = %s
+        )
+        ''', (account_id,)
+    )
+    return db.fetchone()[0]
+
+
+def add_account_total_mastery_db(game_name: str, tag_line: str):
+    # Check if total mastery exists for account
+    # If does not exist
+        # fetch total mastery from riot
+        # add to db
+    account_id = fetch_account_id(game_name, tag_line)
+    if account_total_mastery_exists(account_id):
+        return
+    total_mastery = fetch_account_total_mastery_riot(game_name, tag_line)
+    db.query(
+        '''
+        INSERT INTO account_total_masteries VALUES (%s, %s)
+        ''', (account_id, total_mastery)
+    )
+
+
+def fetch_account_total_mastery(game_name: str, tag_line: str) -> int:
+    # Check if total_mastery exists in db
+    # If not exist
+        # Fetch total mastery score from riot
+        # Add to database
+    # Fetch total_mastery from db
+
+    account_id = fetch_account_id(game_name, tag_line)
+    if not account_total_mastery_exists(account_id):
+        add_account_total_mastery_db(game_name, tag_line)
+    total_mastery = fetch_account_total_mastery_db(account_id)
+    return total_mastery
+
+
+@app.route('/fetch_account_total_mastery_riot', methods=['GET'])
+def fetch_account_total_mastery_riot_route():
     # Given the gameName and tagLine of a North American account, return all the champion masteries of that account
     game_name = request.args.get('gameName')
     tag_line = request.args.get('tagLine')
@@ -331,9 +425,15 @@ def fetch_account_total_mastery_route():
     return jsonify(total_champion_mastery_score)
 
 
+@app.route('/fetch_account_total_mastery', methods=['GET'])
+def fetch_account_total_mastery_route():
+    # Given the gameName and tagLine of a North American account, return all the champion masteries of that account
+    game_name = request.args.get('gameName')
+    tag_line = request.args.get('tagLine')
+    total_champion_mastery_score = fetch_account_total_mastery(game_name, tag_line)
+    return jsonify(total_champion_mastery_score)
+
+
 @app.route('/fetch_profile_total_mastery', methods=['GET'])
 def fetch_profile_total_mastery_route():
     pass
-
-
-
