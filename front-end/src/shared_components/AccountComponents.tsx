@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { splitAccountName } from "../utils"
 
-export function TestComponent() {
+export function AccountsComponent() {
     const [accounts, setAccounts] = useState([])
     const [update, setUpdate] = useState(true)
     const [accountName, setAccountName] = useState('')
@@ -27,11 +27,13 @@ export function TestComponent() {
     return (
         <>
             <div>GET Total mastery score of account</div>
+            <br/>
             <input placeholder='Enter account name' onChange={(e) => {setAccountName(e.target.value)}}/>
             <button onClick={handleSubmit}>Submit</button>
             <div>{totalMastery}</div>
             <hr/>
             <button onClick={() => {setUpdate(!update)}}>Update</button>
+            <br/><br/>
             <div>Account Names</div>
             <div>Mastery Scores</div>
             <ul>
