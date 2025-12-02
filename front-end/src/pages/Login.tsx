@@ -94,7 +94,6 @@ function ProfileForm() {
             <div>For testing:</div>
             <br/>
             <button onClick={handleViewAccounts}>View Accounts</button>
-            <button onClick={() => {navigate('/test')}}>Go to Test Page</button>
         </>
     )
 }
