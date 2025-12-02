@@ -80,7 +80,7 @@ def add_account_to_db(puuid: str, game_name: str, tag_line: str) -> None:
 
 
 def fetch_puuid_riot(game_name: str, tag_line: str):
-    url = f'https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{game_name + '/' + tag_line}'
+    url = f'https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{game_name}/{tag_line}'
     headers = {"X-Riot-Token": env['RIOT_API_KEY']}
     res = requests.get(url, headers=headers)
     d = res.json()
@@ -306,12 +306,13 @@ def fetch_puuid(game_name: str, tag_line: str) -> str:
         add_account_to_db(puuid, game_name, tag_line)
     return puuid
 
-@app.route('/fetch_account_masteries', methods=['POST'])
+@app.route('/fetch_account_masteries', methods=['GET'])
 def fetch_account_masteries_route():
     # Given the gameName and tagLine of a North American account, return all the champion masteries of that account
-    d = request.json
+    game_name = request.args.get('gameName')
+    tag_line = request.args.get('tagLine')
     # Get puuid
-    puuid = fetch_puuid(d['gameName'], d['tagLine'])
+    puuid = fetch_puuid(game_name, tag_line)
     # print(puuid)
     url = f'https://na1.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/{puuid}'
     headers = {'X-Riot-Token': env['RIOT_API_KEY']}
