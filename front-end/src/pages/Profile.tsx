@@ -9,7 +9,9 @@ export default function Profile() {
     const { profileName } = useParams()
     const [accounts, setAccounts] = useState([])
     const [update, setUpdate] = useState(true)
+    const [message, setMessage] = useState('')
     const [accountName, setAccountName] = useState('')
+    const [profileMastery, setProfileMastery] = useState(-1)
     useEffect(() => {
         async function fetchData() {
             const res = await fetch(`http://127.0.0.1:5000/profiles/${profileName}`)
@@ -21,8 +23,20 @@ export default function Profile() {
             setName(d['profile_name'])
             setAccounts(d['accounts'])
         }
+        async function fetchProfileMastery() {
+            const query = new URLSearchParams({ profileName: profileName as string })
+            const res = await fetch(`http://127.0.0.1:5000/fetch_profile_total_mastery?${query}`)
+            if (!res.ok) {
+                setMessage('ERROR something happened')
+                return
+            }
+            const result = await res.json()
+            setProfileMastery(result)
+        }
         fetchData()
+        fetchProfileMastery()
     }, [update])
+
 
     async function handleLinkAccount() {
         const [gameName, tagLine] = splitAccountName(accountName)
@@ -34,7 +48,6 @@ export default function Profile() {
         })
         const result = await res.json()
         console.log(result)
-        
     }
 
     async function handleUnlinkAccount() {
@@ -48,11 +61,9 @@ export default function Profile() {
         const result = await res.json()
         console.log(result)
     }
+
     return (
         <>
-            {/* Profile Name */}
-            <div>{ name }</div>
-
             {/* Link / Unlink Accounts feature */}
             <input placeholder='Account' onChange={(e) => {setAccountName(e.target.value)}}/>
             <button onClick={handleLinkAccount}>Link Account</button>
@@ -64,8 +75,22 @@ export default function Profile() {
             <br/>
             <br/>
 
-            {/* Display Linked Accounts */}
+            {/* Profile Name */}
+            <hr/>
+            <div>Profile: { name }</div>
+
+            {/* Update Button */}
+            <hr/>
             <button onClick={() => {setUpdate(!update)}}>Update</button>
+            {/* Display Profile Total Mastery */}
+            <hr/>
+            <div>Profile Total Mastery</div>
+            <br/>
+            {profileMastery}
+
+            {/* Display Linked Accounts */}
+            <hr/>
+            <div>Linked Accounts</div>
             <ul>
                 {accounts.map((account: any, index: any) => (
                     <li key={index}>
@@ -76,5 +101,3 @@ export default function Profile() {
         </>
     )
 }
-
-function DisplayProfileMastery () {}

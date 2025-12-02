@@ -1,16 +1,17 @@
 import { useNavigate } from "react-router"
-import { DisplayAllAccounts, DisplayAccountMastery } from "./shared_components/AccountComponents"
+import { TestComponent } from "./shared_components/AccountComponents"
 
 export default function Test() {
     let navigate = useNavigate()
     return (
         <>
             <div>Test page</div>
+            <br/>
             <button onClick={() => {navigate('/')}}>Go Back</button>
-            <br/><br/>
-            <DisplayAllAccounts/>
-            <br/><br/>
-            <DisplayAccountMastery/>
+            
+            <hr/>
+            <TestComponent/>
+            <hr/>
         </>
     )
 }

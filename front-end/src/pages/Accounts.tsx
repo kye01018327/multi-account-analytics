@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useNavigate } from "react-router"
-import { DisplayAllAccounts } from '../shared_components/AccountComponents'
+import { TestComponent } from '../shared_components/AccountComponents'
 import { splitAccountName } from "../utils"
 
 
@@ -9,7 +9,7 @@ export default function Accounts() {
         <>
             <ManageAccountsForm/>
             <GoBackButton/>
-            <DisplayAllAccounts/>
+            <TestComponent/>
         </>
     )
 }

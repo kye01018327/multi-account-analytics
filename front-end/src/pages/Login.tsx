@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router'
 
 
@@ -18,33 +18,60 @@ function Title() {
 }
 
 function ProfileForm() {
-    const [profilename, setProfilename] = useState('')
+    const [profileName, setProfileName] = useState('')
     const [message, setMessage] = useState('')
     let navigate = useNavigate()
 
     async function handleViewProfile(e: any) {
         e.preventDefault()
-        if (profilename == '') {
+        if (profileName == '') {
             setMessage('Profile name cannot be blank')
             return
         }
-        const res = await fetch(`http://127.0.0.1:5000/profiles/${profilename}`)
+        const res = await fetch(`http://127.0.0.1:5000/profiles/${profileName}`)
         if (!res.ok) {
             setMessage('Profile does not exist')
             return
         }
         const data = await res.json()
         if (data[0] != '') {
-            navigate(`/profile/${profilename}`)
+            navigate(`/profile/${profileName}`)
         }
     }
 
-    const handleCreateProfile = (e: any) => {
+    async function handleCreateProfile(e: any) {
         e.preventDefault()
-        setMessage('Profile creation currently WIP')
-        if (profilename != '') {
-            // Profile Creation functionality
+        if (profileName == '') {
+            setMessage('Profile name cannot be blank')
+            return
         }
+        const res = await fetch('http://127.0.0.1:5000/create_profile', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({profileName})
+        })
+        if (!res.ok) {
+            console.log('ERROR something happened')
+        }
+        const result = await res.json()
+        console.log(result['message'])
+        setMessage(result['message'])
+    }
+
+    async function handleDeleteProfile(e: any) {
+        e.preventDefault()
+        if (profileName == '') {
+            setMessage('Profile name cannot be blank')
+            return
+        }
+        const query = new URLSearchParams({profileName}).toString()
+        const res = await fetch(`http://127.0.0.1:5000/delete_profile?${query}`, { method: 'DELETE' })
+        if (!res.ok) {
+            console.log('ERROR something happened couldnt delete profile')
+            return
+        }
+        const result = await res.json()
+        setMessage(result['message'])
     }
 
     function handleViewAccounts(e: any) {
@@ -55,14 +82,19 @@ function ProfileForm() {
     return (
         <>
             <input onChange={(e) => {
-                setProfilename(e.target.value)}
+                setProfileName(e.target.value)}
             } name='Username' placeholder='Username'/>
-
+            
             <button onClick={handleViewProfile}>View Profile</button>
             <button onClick={handleCreateProfile}>Create Profile</button>
+            <button onClick={handleDeleteProfile}>Delete Profile</button>
+            <br/><br/>
+            <div>{message}</div>
+            <hr/>
+            <div>For testing:</div>
+            <br/>
             <button onClick={handleViewAccounts}>View Accounts</button>
             <button onClick={() => {navigate('/test')}}>Go to Test Page</button>
-            <div>{message}</div>
         </>
     )
 }

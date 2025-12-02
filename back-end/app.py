@@ -37,11 +37,12 @@ def fetch_profile_db(profile_name: str):
 def profile_exists_in_db(profile_name: str) -> bool:
     db.query(
         '''
-        SELECT EXISTS (SELECT * FROM profiles
+        SELECT EXISTS (SELECT 1 FROM profiles
         WHERE profile_name = %s)
         ''', (profile_name,)
     )
-    return db.fetchone()[0]
+    exists = db.fetchone()[0]
+    return exists
 
 
 def fetch_accounts_linked_to_profile(profile_name) -> list[str]:
@@ -439,6 +440,111 @@ def view_all_accounts():
     return jsonify(account_info)
 
 
+def insert_profile_to_db(profile_name):
+    db.query(
+        '''
+        INSERT INTO profiles (profile_name) VALUES (%s)
+        ''', (profile_name,)
+    )
+
+
+def create_profile(profile_name):
+    # If profile name exists, dont create
+    # Else create profile
+
+    if profile_exists_in_db(profile_name):
+        return jsonify({'status': 'success', 'message': 'profile already exists'}), 200
+    insert_profile_to_db(profile_name)
+    return jsonify({'status': 'success', 'message': 'profile created'}), 200
+
+
+@app.route('/create_profile', methods=['POST'])
+def create_profile_route():
+    d = request.json
+    return create_profile(d['profileName'])
+
+
+def delete_profile_db(profile_name: str):
+    db.query(
+        '''
+        DELETE FROM profiles WHERE profile_name = %s
+        ''', (profile_name,)
+    )
+
+
+def delete_profile(profile_name: str):
+    # Check if exists
+    if profile_exists_in_db(profile_name):
+        delete_profile_db(profile_name)
+        return jsonify({'status': 'success', 'message': 'successfully deleted profile'})
+    return jsonify({'status': 'success', 'message': 'profile does not exist, couldnt delete'})
+        
+
+@app.route('/delete_profile', methods=['DELETE'])
+def delete_profile_route():
+    profile_name = request.args.get('profileName')
+    return delete_profile(profile_name)
+
+
+def calculate_profile_total_mastery(profile_id: int) -> int:
+    db.query(
+        '''
+        SELECT total_mastery from account_total_masteries
+        JOIN profile_account_link ON account_total_masteries.account_id = profile_account_link.account_id
+        WHERE profile_account_link.profile_id = %s
+        ''', (profile_id,)
+    )
+    result = db.fetchall()
+    profile_mastery = 0
+    for entry in result:
+        account_mastery = entry[0]
+        print(entry[0])
+        profile_mastery += account_mastery
+    return profile_mastery
+
+
+def profile_total_mastery_exists(profile_id: int) -> bool:
+    db.query(
+        '''
+        SELECT EXISTS (SELECT 1 FROM profile_total_masteries WHERE profile_id = %s)
+        ''', (profile_id,)
+    )
+    return db.fetchone()[0]
+
+
+def fetch_profile_total_mastery_db(profile_id: int) -> int:
+    db.query(
+        '''
+        SELECT total_mastery FROM profile_total_masteries WHERE profile_id = %s
+        ''', (profile_id,)
+    )
+    result = db.fetchone()
+    if not result:
+        return None
+    return result[0]
+
+
+def add_profile_total_mastery_db(profile_id: int, mastery: int):
+    db.query(
+        '''
+        INSERT INTO profile_total_masteries VALUES (%s, %s)
+        ''', (profile_id, mastery)
+    )
+
+
+def fetch_profile_total_mastery(profile_id: str):
+    # If profile mastery does not exist
+    # Add profile mastery to db
+    if not profile_total_mastery_exists(profile_id):
+        mastery = calculate_profile_total_mastery(profile_id)
+        add_profile_total_mastery_db(profile_id, mastery)
+    mastery = fetch_profile_total_mastery_db(profile_id)
+    return mastery
+
+
 @app.route('/fetch_profile_total_mastery', methods=['GET'])
 def fetch_profile_total_mastery_route():
-    pass
+    profile_name = request.args.get('profileName')
+    profile_id = fetch_profile_id(profile_name)
+    mastery = fetch_profile_total_mastery(profile_id)
+    return jsonify(mastery)
