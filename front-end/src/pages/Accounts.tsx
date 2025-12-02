@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useNavigate } from "react-router"
+import { DisplayAccounts } from '../shared_components/AccountComponents'
+import { splitAccountName } from "../utils"
 
 
 export default function Accounts() {
@@ -23,7 +25,8 @@ function ManageAccountsForm() {
             setDebugMsg('account name cannot be blank')
             return
         }
-        const data = {accountName}
+        const [gameName, tagLine] = splitAccountName(accountName)
+        const data = {gameName, tagLine}
         const res = await fetch('http://127.0.0.1:5000/add_account', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -38,7 +41,8 @@ function ManageAccountsForm() {
             setDebugMsg('account name cannot be blank')
             return
         }
-        const data = {accountName}
+        const [gameName, tagLine] = splitAccountName(accountName)
+        const data = {gameName, tagLine}
         const res = await fetch('http://127.0.0.1:5000/remove_account', {
             method: 'POST',
             headers: {'Content-Type' : 'application/json'},
@@ -56,36 +60,6 @@ function ManageAccountsForm() {
             <br/>
             {debugMsg}
             <br/>
-        </>
-    )
-}
-
-function DisplayAccounts() {
-    const [accounts, setAccounts] = useState([])
-    const [update, setUpdate] = useState(true)
-    useEffect(() => {
-        async function getAccounts() {
-            const res = await fetch(`http://127.0.0.1:5000/allaccounts`)
-            const result = await res.json()
-            setAccounts(result)
-        }
-        getAccounts()
-    }, [update])
-
-    function handleClick() {
-        setUpdate(!update)
-    }
-
-    return (
-        <>
-            <button onClick={handleClick}>Update</button>
-            <ul>
-                {accounts.map((account, index) => (
-                    <li key={index}>
-                        {account}
-                    </li>
-                ))}
-            </ul>
         </>
     )
 }

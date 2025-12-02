@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
+import { splitAccountName } from '../utils'
 
 
 export default function Profile() {
@@ -24,8 +25,8 @@ export default function Profile() {
     }, [update])
 
     async function handleLinkAccount() {
-        const data = {profileName, accountName}
-        console.log(data)
+        const [gameName, tagLine] = splitAccountName(accountName)
+        const data = {profileName, gameName, tagLine}
         const res = await fetch('http://127.0.0.1:5000/link_account', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -33,11 +34,12 @@ export default function Profile() {
         })
         const result = await res.json()
         console.log(result)
-
+        
     }
 
     async function handleUnlinkAccount() {
-        const data = {profileName, accountName}
+        const [gameName, tagLine] = splitAccountName(accountName)
+        const data = {profileName, gameName, tagLine}
         const res = await fetch('http://127.0.0.1:5000/unlink_account', {
             'method': 'POST',
             'headers': {'Content-Type': 'application/json'},

@@ -61,6 +61,7 @@ function ProfileForm() {
             <button onClick={handleViewProfile}>View Profile</button>
             <button onClick={handleCreateProfile}>Create Profile</button>
             <button onClick={handleViewAccounts}>View Accounts</button>
+            <button onClick={() => {navigate('/test')}}>Go to Test Page</button>
             <div>{message}</div>
         </>
     )

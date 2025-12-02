@@ -23,113 +23,129 @@ def test_message():
     return jsonify({'status': 'success', 'message': 'server is running'}), 200
 
 
-@app.route('/profiles/<profile_name>')
-def get_profile(profile_name):
-    out = {}
-    # Check if profile exists
+def get_profile(profile_name: str):
     db.query(
         '''
         SELECT * FROM profiles
         WHERE profile_name = %s
         ''', (profile_name,)
     )
-    data = db.fetchall()
-    if not data:
-        abort(404)
-    out['profile_id'] = data[0][0]
-    out['profile_name'] = data[0][1]
-    # Get linked accounts
+    rows = db.fetchall()
+    return rows
+
+
+def profile_exists_in_db(rows: list[tuple]) -> bool:
+    exists = True if rows else False
+    return exists
+
+
+def fetch_accounts_linked_to_profile(profile_name) -> list[str]:
     db.query(
         '''
-        SELECT c.account_id, c.gamename, c.tagline FROM accounts AS c
-        JOIN
-        (SELECT * FROM
-        (SELECT * FROM profiles AS a
-        JOIN
-        profile_account AS b on a.profile_id = b.profile_id)
-        WHERE profile_name = %s) AS d
-        ON c.account_id = d.account_id
+        SELECT a.gamename, a.tagline
+        FROM accounts AS a
+        JOIN profile_account AS pa ON a.account_id = pa.account_id
+        JOIN profiles AS p ON pa.profile_id = p.profile_id
+        WHERE p.profile_name = %s
         ''', (profile_name,)
     )
-    data = db.fetchall()
-    out['accounts'] = []
-    for account in data:
-        out['accounts'].append(account[1] + '#' + account[2])
-    print(out)
-    return jsonify(out)
-    # If profile does not exist, return JSON with null
-    # If profile exists, return JSON with content
+    rows = db.fetchall()
+    accounts = []
+    for account in rows:
+        accounts.append(account[0] + '#' + account[1])
+    return accounts
 
 
-@app.route('/add_account', methods=['POST'])
-def add_account_route():
-    data = request.json
-    game_name, _, tag_line = data['accountName'].partition('#')
-    return add_account(game_name, tag_line)
+@app.route('/profiles/<profile_name>')
+def get_profile_route(profile_name):
+    d = {}
+    # Check if profile exists
+    rows = get_profile(profile_name)
+    exists = profile_exists_in_db(rows)
+    if not exists:
+        abort(404)
+    d['profile_id'] = rows[0][0]
+    d['profile_name'] = rows[0][1]
+    # Get linked accounts
+    d['accounts'] = fetch_accounts_linked_to_profile(profile_name)
+    return jsonify(d)
 
 
-def add_account(game_name, tag_line):
-    res = fetch_lol_account(game_name, tag_line)
-    if not res.ok:
-        return jsonify({'status': 'failure', 'message': 'error, invalid account'}), 400
+def add_account_to_db(puuid: str, game_name: str, tag_line: str) -> None:
+    db.query(
+        '''
+        INSERT INTO accounts (puuid, gameName, tagLine) VALUES (%s, %s, %s)
+        ''', (puuid, game_name, tag_line)
+    )
+
+
+def fetch_puuid_riot(game_name: str, tag_line: str):
+    url = f'https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{game_name + '/' + tag_line}'
+    headers = {"X-Riot-Token": env['RIOT_API_KEY']}
+    res = requests.get(url, headers=headers)
     d = res.json()
-    if res.ok:
-        # Check if puuid exists
-        db.query(
-            '''
-            SELECT * FROM accounts WHERE puuid = %s
-            ''', (d['puuid'],)
-        )
-        result = db.fetchall()
-        # print(result)
-        if result:
-            return jsonify({'status': 'success', 'message': 'account already exists'}), 200
-        db.query(
-            '''
-            INSERT INTO accounts (puuid, gameName, tagLine) VALUES (%s, %s, %s)
-            ''', (d['puuid'], d['gameName'], d['tagLine'])
-        )
-
-        # Check again
-        db.query(
-            '''
-            SELECT * FROM accounts WHERE puuid = %s
-            ''', (d['puuid'],)
-        )
-        result = db.fetchall()
-        print(result)
-        return jsonify({'status': 'success', 'message': 'account added'}), 200
+    puuid = d['puuid']
+    return puuid
 
 
-
-def check_account_exists_in_db(game_name, tag_line):
+def fetch_account(game_name: str, tag_line: str) -> bool:
     db.query(
         '''
         SELECT * FROM accounts WHERE gamename = %s AND tagline = %s 
         ''', (game_name, tag_line)
     )
-    return db.fetchall()
+    row = db.fetchall()
+    return row
 
 
-@app.route('/remove_account', methods=['POST'])
-def remove_account():
-    data = request.json
-    game_name, _, tag_line = data['accountName'].partition('#')
-    result = check_account_exists_in_db(game_name, tag_line)
-    if not result:
-        return jsonify({'status': 'success', 'message': 'cannot remove, account does not exist'}), 200
-    # Else remove account
+def entry_exists(input: str):
+    return True if input else False
+
+
+def add_account(game_name, tag_line):
+    # Check if puuid exists
+    row = fetch_account(game_name, tag_line)
+    exists = entry_exists(row)
+    if exists:
+        return jsonify({'status': 'success', 'message': 'account already exists'}), 200
+    # Else add account to database
+    # Check if account name is valid
+    res = fetch_puuid_riot(game_name, tag_line)
+    if not res.ok:
+        return jsonify({'status': 'failure', 'message': 'error, invalid account name'}), 400
+    d = res.json()
+    add_account_to_db(d['puuid'], d['gameName'], d['tagLine'])
+    return jsonify({'status': 'success', 'message': 'account added'}), 200
+
+
+@app.route('/add_account', methods=['POST'])
+def add_account_route():
+    d = request.json
+    return add_account(d['gameName'], d['tagLine'])
+
+
+def remove_account_from_db(game_name: str, tag_line: str) -> None:
     db.query(
         '''
         DELETE FROM accounts
         WHERE gamename = %s AND tagline = %s
         ''', (game_name, tag_line)
     )
-    return jsonify({'status': 'success', 'message': 'account removed from database'}), 200
 
 
-def link_account_to_profile(profile_name, game_name, tag_line):
-    # Check if already linked
+@app.route('/remove_account', methods=['POST'])
+def remove_account_route():
+    d = request.json
+    row = fetch_account(d['gameName'], d['tagLine'])
+    exists = entry_exists(row)
+    if not exists:
+        return jsonify({'status': 'success', 'message': 'cannot remove, account does not exist'}), 200
+    # Else remove account
+    elif exists:
+        remove_account_from_db(d['gameName'], d['tagLine'])
+        return jsonify({'status': 'success', 'message': 'account removed from database'}), 200
+
+def account_linked_to_profile(profile_name: str, game_name: str, tag_line: str) -> bool:
     db.query(
         '''
         (SELECT * FROM profile_account 
@@ -138,10 +154,12 @@ def link_account_to_profile(profile_name, game_name, tag_line):
         (SELECT account_id FROM accounts WHERE gamename = %s and tagline = %s))
         ''', (profile_name, game_name, tag_line)
     )
-    if db.fetchall():
-       return jsonify({'status': 'success', 'message': 'account already linked'}), 200 
+    rows = db.fetchall()
+    exists = True if rows else False
+    return exists
 
-    # If not linked, add profile_account row in db table
+
+def add_profile_account_link(profile_name: str, game_name: str, tag_line: str) -> None:
     db.query(
         '''
         INSERT INTO profile_account VALUES (
@@ -150,71 +168,158 @@ def link_account_to_profile(profile_name, game_name, tag_line):
         )
         ''', (profile_name, game_name, tag_line)
     )
-    return jsonify({'status': 'success', 'message': 'added account to profile'}), 200
+
+
+def link_account_to_profile(profile_name, game_name, tag_line):
+    # Check if already linked
+    exists = account_linked_to_profile(profile_name, game_name, tag_line)
+    if exists:
+       return jsonify({'status': 'success', 'message': 'account already linked'}), 200 
+
+    # If not linked, add profile_account row in db table
+    elif not exists:
+        add_profile_account_link(profile_name, game_name, tag_line)
+        return jsonify({'status': 'success', 'message': 'added account to profile'}), 200
 
 
 @app.route('/link_account', methods=['POST'])
 def link_account_route():
-    # {'profileName', 'accountName'}
-    data = request.json
-    game_name, _, tag_line = data['accountName'].partition('#')
-    result = check_account_exists_in_db(game_name, tag_line)
-    exists = True if result else False
+    # {'profileName', 'gameName', 'tagLine}
+    d = request.json
+    row = fetch_account(d['gameName'], d['tagLine'])
+    exists = entry_exists(row)
     if exists:
-        return link_account_to_profile(data['profileName'], game_name, tag_line)
+        return link_account_to_profile(d['profileName'], d['gameName'], d['tagLine'])
     elif not exists:
         # Add account to database
-        add_account(game_name, tag_line)
+        add_account(d['gameName'], d['tagLine'])
         # Then add profile_account row in db table
-        return link_account_to_profile(data['profileName'], game_name, tag_line)
+        return link_account_to_profile(d['profileName'], d['gameName'], d['tagLine'])
 
 
-@app.route('/unlink_account', methods=['POST'])
-def unlink_account_route():
-    # {'profileName', 'accountName'}
-    data = request.json
-    game_name, _, tag_line = data['accountName'].partition('#')
-    # Check if account is linked exists
+def account_link_exists(profile_name: str, game_name: str, tag_line: str) -> bool:
     db.query(
         '''
         SELECT * FROM (SELECT * FROM profiles
         JOIN profile_account ON profiles.profile_id = profile_account.profile_id
         JOIN accounts ON profile_account.account_id = accounts.account_id)
         WHERE profile_name = %s AND gamename = %s AND tagline = %s
-        ''', (data['profileName'], game_name, tag_line)
+        ''', (profile_name, game_name, tag_line)
     )
-    result = db.fetchall()
-    # If account is not linked, do nothing
-    if not result:
-        return jsonify({'status': 'success', 'message': 'nothing to unlink'}), 200
-    # Else unlink
+    rows = db.fetchall()
+    exists = True if rows else False
+    return exists
+
+def unlink_account(profile_name: str, game_name: str, tag_line: str) -> None:
     db.query(
         '''
         DELETE FROM profile_account WHERE
         profile_id = (SELECT profile_id FROM profiles WHERE profile_name = %s) AND
         account_id = (SELECT account_id FROM accounts WHERE gamename = %s AND tagline = %s)
-        ''', (data['profileName'], game_name, tag_line)
+        ''', (profile_name, game_name, tag_line)
     )
+
+
+@app.route('/unlink_account', methods=['POST'])
+def unlink_account_route():
+    # {'profileName', 'accountName'}
+    d = request.json
+    # Check if account link exists
+    exists = account_link_exists(d['profileName'], d['gameName'], d['tagLine'])
+    # If account is not linked, do nothing
+    if not exists:
+        return jsonify({'status': 'success', 'message': 'nothing to unlink'}), 200
+    # Else unlink
+    unlink_account(d['profileName'], d['gameName'], d['tagLine'])
     return jsonify({'status': 'success', 'message': 'unlinked account'}), 200
 
 
-@app.route('/allaccounts')
-def view_all_accounts():
+def fetch_all_account_names() -> list:
     db.query(
         'SELECT * FROM accounts'
     )
-    result = db.fetchall()
+    rows = db.fetchall()
     account_names_only = []
-    for account in result:
+    for account in rows:
         game_name = account[2]
         tag_line = account[3]
         account_name = game_name + '#' + tag_line
         account_names_only.append(account_name)
-    return jsonify(account_names_only)
+    return account_names_only
 
 
-def fetch_lol_account(game_name: str, tag_line: str):
-    url = f'https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{game_name + '/' + tag_line}'
-    headers = {"X-Riot-Token": env['RIOT_API_KEY']}
+@app.route('/allaccounts')
+def view_all_accounts():
+    account_names = fetch_all_account_names()
+    return jsonify(account_names)
+
+def fetch_puuid_db(game_name: str, tag_line: str) -> str:
+    # Check if account exists in db
+    # If exists, fetch puuid from db
+    # If does not exist in db
+        # Add account to db
+        # Get puuid from db
+    rows = fetch_account(game_name, tag_line)
+    exists = entry_exists(rows)
+    if not exists:
+        add_account_to_db(game_name, tag_line)
+    db.query(
+        '''
+        SELECT puuid FROM accounts
+        WHERE gamename = %s AND tagline = %s
+        ''', (game_name, tag_line)
+    )
+    r = db.fetchall()
+    puuid = r[0][0]
+    return puuid
+
+
+@app.route('/test')
+def test():
+    puuid = fetch_puuid('kevin22703307064', 'NA1')
+    print(puuid)
+    return jsonify('test')
+
+
+def fetch_puuid(game_name: str, tag_line: str) -> str:
+    # Given game_name and tag_line of an account, fetch the puuid of that account
+    # Get puuid from project database
+        # Check whether account exists in database
+        # If exists
+            # Get puuid from database
+        # If does not exist
+            # Fetch puuid from Riot
+            # Insert new account into database
+    # Return puuid as string
+
+    row = fetch_account(game_name, tag_line)
+    exists = entry_exists(row)
+    puuid = None
+    if exists:
+        # Get puuid from database
+        puuid = fetch_puuid_db(game_name, tag_line)
+        return puuid
+    elif not exists:
+        # Fetch puuid from Riot
+        puuid = fetch_puuid_riot(game_name, tag_line)
+        # Insert new account into database
+        add_account_to_db(puuid, game_name, tag_line)
+    return puuid
+
+@app.route('/fetch_account_masteries', methods=['POST'])
+def fetch_account_masteries_route():
+    # Given the gameName and tagLine of a North American account, return all the champion masteries of that account
+    d = request.json
+    # Get puuid
+    puuid = fetch_puuid(d['gameName'], d['tagLine'])
+    # print(puuid)
+    url = f'https://na1.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/{puuid}'
+    headers = {'X-Riot-Token': env['RIOT_API_KEY']}
     res = requests.get(url, headers=headers)
-    return res
+    champion_masteries = res.json()
+    total_champion_mastery_score = 0
+    for champion in champion_masteries:
+        total_champion_mastery_score += champion['championPoints']
+    return jsonify(total_champion_mastery_score)
+
+

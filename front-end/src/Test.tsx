@@ -1,28 +1,16 @@
-import { useEffect, useState } from "react"
+import { useNavigate } from "react-router"
+import { DisplayAccounts, DisplayAccountMastery } from "./shared_components/AccountComponents"
 
 export default function Test() {
-    const [data, setData] = useState([])
-    const [loading, setLoading] = useState(true)
-    useEffect(() => {
-        async function loadData() {
-            try {
-                const res = await fetch('http://127.0.0.1:5000/profiles/test')
-                const data = await res.json()
-                setData(data)
-            } finally {
-                setLoading(false)
-            }
-        }
-
-        loadData()
-        }, [])
-        
-    if (loading) return <div>Loading...</div>
-
+    let navigate = useNavigate()
     return (
         <>
             <div>Test page</div>
-            <div>{JSON.stringify(data)}</div>
+            <button onClick={() => {navigate('/')}}>Go Back</button>
+            <br/><br/>
+            <DisplayAccounts/>
+            <br/><br/>
+            <DisplayAccountMastery/>
         </>
     )
 }
