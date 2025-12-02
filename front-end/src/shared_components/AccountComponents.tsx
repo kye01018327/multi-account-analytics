@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { splitAccountName } from "../utils"
 
-export function DisplayAccounts() {
+export function DisplayAllAccounts() {
     const [accounts, setAccounts] = useState([])
     const [update, setUpdate] = useState(true)
     useEffect(() => {
@@ -20,16 +20,23 @@ export function DisplayAccounts() {
     return (
         <>
             <button onClick={handleClick}>Update</button>
+            <br/><br/>
+            <div>Account Names</div>
+            <div>Mastery Scores</div>
             <ul>
                 {accounts.map((account, index) => (
                     <li key={index}>
-                        {account}
+                        {account['accountName']}
+                        <br/>
+                        {account['totalMastery']}
+                        <br/><br/>
                     </li>
                 ))}
             </ul>
         </>
     )
 }
+
 
 export function DisplayAccountMastery() {
     const [accountName, setAccountName] = useState('')

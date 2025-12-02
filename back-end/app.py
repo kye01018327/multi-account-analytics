@@ -238,24 +238,23 @@ def unlink_account_route():
     return jsonify({'status': 'success', 'message': 'unlinked account'}), 200
 
 
-def fetch_all_account_names() -> list:
+def fetch_all_accounts_info() -> list:
     db.query(
-        'SELECT game_name, tag_line FROM accounts'
+        '''
+        SELECT game_name, tag_line, total_mastery FROM accounts
+        JOIN account_total_masteries ON accounts.account_id = account_total_masteries.account_id
+        '''
     )
     rows = db.fetchall()
-    account_names_only = []
-    for account in rows:
-        game_name = account[0]
-        tag_line = account[1]
-        account_name = game_name + '#' + tag_line
-        account_names_only.append(account_name)
-    return account_names_only
-
-
-@app.route('/allaccounts')
-def view_all_accounts():
-    account_names = fetch_all_account_names()
-    return jsonify(account_names)
+    accounts = []
+    for entry in rows:
+        account = {}
+        game_name = entry[0]
+        tag_line = entry[1]
+        account['accountName'] = game_name + '#' + tag_line
+        account['totalMastery'] = entry[2]
+        accounts.append(account)
+    return accounts
 
 
 def fetch_puuid_db(game_name: str, tag_line: str) -> str:
@@ -432,6 +431,12 @@ def fetch_account_total_mastery_route():
     tag_line = request.args.get('tagLine')
     total_champion_mastery_score = fetch_account_total_mastery(game_name, tag_line)
     return jsonify(total_champion_mastery_score)
+
+
+@app.route('/allaccounts')
+def view_all_accounts():
+    account_info = fetch_all_accounts_info()
+    return jsonify(account_info)
 
 
 @app.route('/fetch_profile_total_mastery', methods=['GET'])

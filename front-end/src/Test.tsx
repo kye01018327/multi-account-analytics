@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router"
-import { DisplayAccounts, DisplayAccountMastery } from "./shared_components/AccountComponents"
+import { DisplayAllAccounts, DisplayAccountMastery } from "./shared_components/AccountComponents"
 
 export default function Test() {
     let navigate = useNavigate()
@@ -8,7 +8,7 @@ export default function Test() {
             <div>Test page</div>
             <button onClick={() => {navigate('/')}}>Go Back</button>
             <br/><br/>
-            <DisplayAccounts/>
+            <DisplayAllAccounts/>
             <br/><br/>
             <DisplayAccountMastery/>
         </>
