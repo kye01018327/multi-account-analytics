@@ -42,9 +42,9 @@ def profile_exists_in_db(rows: list[tuple]) -> bool:
 def fetch_accounts_linked_to_profile(profile_name) -> list[str]:
     db.query(
         '''
-        SELECT a.gamename, a.tagline
+        SELECT a.game_name, a.tag_line
         FROM accounts AS a
-        JOIN profile_account AS pa ON a.account_id = pa.account_id
+        JOIN profile_account_link AS pa ON a.account_id = pa.account_id
         JOIN profiles AS p ON pa.profile_id = p.profile_id
         WHERE p.profile_name = %s
         ''', (profile_name,)
@@ -74,7 +74,7 @@ def get_profile_route(profile_name):
 def add_account_to_db(puuid: str, game_name: str, tag_line: str) -> None:
     db.query(
         '''
-        INSERT INTO accounts (puuid, gameName, tagLine) VALUES (%s, %s, %s)
+        INSERT INTO accounts (puuid, game_name, tag_line) VALUES (%s, %s, %s)
         ''', (puuid, game_name, tag_line)
     )
 
@@ -91,7 +91,7 @@ def fetch_puuid_riot(game_name: str, tag_line: str):
 def fetch_account(game_name: str, tag_line: str) -> bool:
     db.query(
         '''
-        SELECT * FROM accounts WHERE gamename = %s AND tagline = %s 
+        SELECT * FROM accounts WHERE game_name = %s AND tag_line = %s 
         ''', (game_name, tag_line)
     )
     row = db.fetchall()
@@ -128,7 +128,7 @@ def remove_account_from_db(game_name: str, tag_line: str) -> None:
     db.query(
         '''
         DELETE FROM accounts
-        WHERE gamename = %s AND tagline = %s
+        WHERE game_name = %s AND tag_line = %s
         ''', (game_name, tag_line)
     )
 
@@ -148,10 +148,10 @@ def remove_account_route():
 def account_linked_to_profile(profile_name: str, game_name: str, tag_line: str) -> bool:
     db.query(
         '''
-        (SELECT * FROM profile_account 
+        (SELECT * FROM profile_account_link 
         WHERE profile_id = (SELECT profile_id FROM profiles WHERE profile_name = %s) 
         AND account_id = 
-        (SELECT account_id FROM accounts WHERE gamename = %s and tagline = %s))
+        (SELECT account_id FROM accounts WHERE game_name = %s and tag_line = %s))
         ''', (profile_name, game_name, tag_line)
     )
     rows = db.fetchall()
@@ -162,9 +162,9 @@ def account_linked_to_profile(profile_name: str, game_name: str, tag_line: str) 
 def add_profile_account_link(profile_name: str, game_name: str, tag_line: str) -> None:
     db.query(
         '''
-        INSERT INTO profile_account VALUES (
+        INSERT INTO profile_account_link VALUES (
             (SELECT profile_id FROM profiles WHERE profile_name = %s),
-            (SELECT account_id FROM accounts WHERE gamename = %s AND tagline = %s)
+            (SELECT account_id FROM accounts WHERE game_name = %s AND tag_line = %s)
         )
         ''', (profile_name, game_name, tag_line)
     )
@@ -176,7 +176,7 @@ def link_account_to_profile(profile_name, game_name, tag_line):
     if exists:
        return jsonify({'status': 'success', 'message': 'account already linked'}), 200 
 
-    # If not linked, add profile_account row in db table
+    # If not linked, add profile_account_link row in db table
     elif not exists:
         add_profile_account_link(profile_name, game_name, tag_line)
         return jsonify({'status': 'success', 'message': 'added account to profile'}), 200
@@ -193,7 +193,7 @@ def link_account_route():
     elif not exists:
         # Add account to database
         add_account(d['gameName'], d['tagLine'])
-        # Then add profile_account row in db table
+        # Then add profile_account_link row in db table
         return link_account_to_profile(d['profileName'], d['gameName'], d['tagLine'])
 
 
@@ -201,9 +201,9 @@ def account_link_exists(profile_name: str, game_name: str, tag_line: str) -> boo
     db.query(
         '''
         SELECT * FROM (SELECT * FROM profiles
-        JOIN profile_account ON profiles.profile_id = profile_account.profile_id
-        JOIN accounts ON profile_account.account_id = accounts.account_id)
-        WHERE profile_name = %s AND gamename = %s AND tagline = %s
+        JOIN profile_account_link ON profiles.profile_id = profile_account_link.profile_id
+        JOIN accounts ON profile_account_link.account_id = accounts.account_id)
+        WHERE profile_name = %s AND game_name = %s AND tag_line = %s
         ''', (profile_name, game_name, tag_line)
     )
     rows = db.fetchall()
@@ -213,9 +213,9 @@ def account_link_exists(profile_name: str, game_name: str, tag_line: str) -> boo
 def unlink_account(profile_name: str, game_name: str, tag_line: str) -> None:
     db.query(
         '''
-        DELETE FROM profile_account WHERE
+        DELETE FROM profile_account_link WHERE
         profile_id = (SELECT profile_id FROM profiles WHERE profile_name = %s) AND
-        account_id = (SELECT account_id FROM accounts WHERE gamename = %s AND tagline = %s)
+        account_id = (SELECT account_id FROM accounts WHERE game_name = %s AND tag_line = %s)
         ''', (profile_name, game_name, tag_line)
     )
 
@@ -236,13 +236,13 @@ def unlink_account_route():
 
 def fetch_all_account_names() -> list:
     db.query(
-        'SELECT * FROM accounts'
+        'SELECT game_name, tag_line FROM accounts'
     )
     rows = db.fetchall()
     account_names_only = []
     for account in rows:
-        game_name = account[2]
-        tag_line = account[3]
+        game_name = account[0]
+        tag_line = account[1]
         account_name = game_name + '#' + tag_line
         account_names_only.append(account_name)
     return account_names_only
@@ -266,7 +266,7 @@ def fetch_puuid_db(game_name: str, tag_line: str) -> str:
     db.query(
         '''
         SELECT puuid FROM accounts
-        WHERE gamename = %s AND tagline = %s
+        WHERE game_name = %s AND tag_line = %s
         ''', (game_name, tag_line)
     )
     r = db.fetchall()
