@@ -12,27 +12,33 @@ export default function Profile() {
     const [message, setMessage] = useState('')
     const [accountName, setAccountName] = useState('')
     const [profileMastery, setProfileMastery] = useState(-1)
+
+
+    async function fetchProfileMastery() {
+        const query = new URLSearchParams({ profileName: profileName as string })
+        const res = await fetch(`http://127.0.0.1:5000/fetch_profile_total_mastery?${query}`)
+        if (!res.ok) {
+            setMessage('ERROR something happened')
+            return
+        }
+        const result = await res.json()
+        setProfileMastery(result)
+    }
+
+
+    async function fetchData() {
+        const res = await fetch(`http://127.0.0.1:5000/profiles/${profileName}`)
+        if (!res.ok) {
+            setName('ERROR')
+            return
+        }
+        const d = await res.json()
+        setName(d['profile_name'])
+        setAccounts(d['accounts'])
+    }
+
+
     useEffect(() => {
-        async function fetchData() {
-            const res = await fetch(`http://127.0.0.1:5000/profiles/${profileName}`)
-            if (!res.ok) {
-                setName('ERROR')
-                return
-            }
-            const d = await res.json()
-            setName(d['profile_name'])
-            setAccounts(d['accounts'])
-        }
-        async function fetchProfileMastery() {
-            const query = new URLSearchParams({ profileName: profileName as string })
-            const res = await fetch(`http://127.0.0.1:5000/fetch_profile_total_mastery?${query}`)
-            if (!res.ok) {
-                setMessage('ERROR something happened')
-                return
-            }
-            const result = await res.json()
-            setProfileMastery(result)
-        }
         fetchData()
         fetchProfileMastery()
     }, [update])
@@ -62,6 +68,18 @@ export default function Profile() {
         console.log(result)
     }
 
+    async function handleUpdateMastery() {
+        const data = {profileName}
+        const res = await fetch('http://127.0.0.1:5000/update_profile_mastery', {
+            'method': 'PATCH',
+            'headers': {'Content-Type': 'application/json'},
+            'body': JSON.stringify(data)
+        })
+        const result = await res.json()
+        console.log(result)
+        setUpdate(update => !update)
+    }
+
     return (
         <>
             {/* Link / Unlink Accounts feature */}
@@ -81,7 +99,7 @@ export default function Profile() {
 
             {/* Update Button */}
             <hr/>
-            <button onClick={() => {setUpdate(!update)}}>Update</button>
+            <button onClick={handleUpdateMastery}>Update</button>
             {/* Display Profile Total Mastery */}
             <hr/>
             <div>Profile Total Mastery</div>

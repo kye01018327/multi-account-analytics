@@ -110,7 +110,7 @@ def entry_exists(input: str):
     return True if input else False
 
 
-def add_account_db(game_name, tag_line):
+def add_account(game_name, tag_line):
     # Check if puuid exists
     row = fetch_account(game_name, tag_line)
     exists = entry_exists(row)
@@ -122,13 +122,15 @@ def add_account_db(game_name, tag_line):
     if puuid is None:
         return jsonify({'status': 'failure', 'message': 'error, invalid account name'}), 400
     add_account_to_db(puuid, game_name, tag_line)
+    add_account_total_mastery_db(game_name, tag_line)
+    
     return jsonify({'status': 'success', 'message': 'account added'}), 200
 
 
 @app.route('/add_account', methods=['POST'])
 def add_account_route():
     d = request.json
-    return add_account_db(d['gameName'], d['tagLine'])
+    return add_account(d['gameName'], d['tagLine'])
 
 
 def remove_account_from_db(game_name: str, tag_line: str) -> None:
@@ -197,7 +199,7 @@ def link_account_route():
         return link_account_to_profile(d['profileName'], d['gameName'], d['tagLine'])
     elif not exists:
         # Add account to database
-        add_account_db(d['gameName'], d['tagLine'])
+        add_account(d['gameName'], d['tagLine'])
         # Then add profile_account_link row in db table
         return link_account_to_profile(d['profileName'], d['gameName'], d['tagLine'])
 
@@ -358,7 +360,7 @@ def query_fetch_account_id(game_name: str, tag_line: str) -> int:
 
 def fetch_account_id(game_name: str, tag_line: str) -> int:
     if not account_exists_db(game_name, tag_line):
-        add_account_db(game_name, tag_line)
+        add_account(game_name, tag_line)
     account_id = query_fetch_account_id(game_name, tag_line)
     return account_id
 
@@ -495,10 +497,10 @@ def calculate_profile_total_mastery(profile_id: int) -> int:
         ''', (profile_id,)
     )
     result = db.fetchall()
+    print(result)
     profile_mastery = 0
     for entry in result:
         account_mastery = entry[0]
-        print(entry[0])
         profile_mastery += account_mastery
     return profile_mastery
 
@@ -548,3 +550,29 @@ def fetch_profile_total_mastery_route():
     profile_id = fetch_profile_id(profile_name)
     mastery = fetch_profile_total_mastery(profile_id)
     return jsonify(mastery)
+
+
+def update_profile_total_mastery_db(profile_id: int, total_mastery: int):
+    db.query(
+        '''
+        UPDATE profile_total_masteries
+        SET total_mastery = %s WHERE profile_id = %s
+        ''', (total_mastery, profile_id)
+    )
+
+
+def update_profile_total_mastery(profile_id: int):
+    mastery = calculate_profile_total_mastery(profile_id)
+    if profile_total_mastery_exists(profile_id):
+        update_profile_total_mastery_db(profile_id, mastery)
+        return
+    add_profile_total_mastery_db(profile_id, mastery)
+
+
+@app.route('/update_profile_mastery', methods=['PATCH'])
+def update_profile_total_mastery_route():
+    d = request.json
+    profile_id = fetch_profile_id(d['profileName'])
+    update_profile_total_mastery(profile_id)
+    return jsonify({'status': 'success', 'message': 'updated profile mastery'}), 200
+    
