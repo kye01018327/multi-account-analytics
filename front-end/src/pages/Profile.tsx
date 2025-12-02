@@ -76,3 +76,5 @@ export default function Profile() {
         </>
     )
 }
+
+function DisplayProfileMastery

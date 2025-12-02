@@ -1,0 +1,42 @@
+CREATE TABLE profiles (
+	profile_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+	profile_name VARCHAR(255) UNIQUE
+)
+
+CREATE TABLE accounts (
+	account_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+	puuid CHAR(78) UNIQUE,
+	game_name VARCHAR(16),
+	tag_line VARCHAR(5),
+	UNIQUE (game_name, tag_line)
+)
+
+CREATE TABLE profile_account_link (
+	profile_id INT,
+	account_id INT,
+	PRIMARY KEY (profile_id, account_id),
+	FOREIGN KEY (profile_id)
+		REFERENCES profiles (profile_id)
+		ON DELETE CASCADE,
+	FOREIGN KEY (account_id)
+		REFERENCES accounts (account_id)
+		ON DELETE CASCADE
+)
+
+CREATE TABLE account_total_mastery(
+	account_id INT,
+	total_mastery INT,
+	PRIMARY KEY (account_id),
+	FOREIGN KEY (account_id)
+		REFERENCES accounts (account_id)
+		ON DELETE CASCADE
+)
+
+CREATE TABLE profile_total_mastery (
+	profile_id INT,
+	total_mastery INT,
+	PRIMARY KEY (profile_id),
+	FOREIGN KEY (profile_id)
+		REFERENCES profiles (profile_id)
+		ON DELETE CASCADE
+)
