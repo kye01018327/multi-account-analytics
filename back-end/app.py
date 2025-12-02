@@ -306,8 +306,8 @@ def fetch_puuid(game_name: str, tag_line: str) -> str:
         add_account_to_db(puuid, game_name, tag_line)
     return puuid
 
-@app.route('/fetch_account_masteries', methods=['GET'])
-def fetch_account_masteries_route():
+@app.route('/fetch_account_total_mastery', methods=['GET'])
+def fetch_account_total_mastery_route():
     # Given the gameName and tagLine of a North American account, return all the champion masteries of that account
     game_name = request.args.get('gameName')
     tag_line = request.args.get('tagLine')
@@ -322,5 +322,7 @@ def fetch_account_masteries_route():
     for champion in champion_masteries:
         total_champion_mastery_score += champion['championPoints']
     return jsonify(total_champion_mastery_score)
+
+
 
 

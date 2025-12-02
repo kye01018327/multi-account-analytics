@@ -39,7 +39,7 @@ export function DisplayAccountMastery() {
         // Send GET request to server's get masteries JSON endpoint
         const [gameName, tagLine] = splitAccountName(accountName)
         const query = new URLSearchParams({ gameName, tagLine }).toString()
-        const res = await fetch(`http://127.0.0.1:5000/fetch_account_masteries?${query}`, {method: 'GET'})
+        const res = await fetch(`http://127.0.0.1:5000/fetch_account_total_mastery?${query}`, {method: 'GET'})
         const result = await res.json()
         setTotalMastery(result)
     }
