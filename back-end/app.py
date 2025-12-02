@@ -23,7 +23,7 @@ def test_message():
     return jsonify({'status': 'success', 'message': 'server is running'}), 200
 
 
-def get_profile(profile_name: str):
+def fetch_profile_db(profile_name: str):
     db.query(
         '''
         SELECT * FROM profiles
@@ -60,7 +60,7 @@ def fetch_accounts_linked_to_profile(profile_name) -> list[str]:
 def get_profile_route(profile_name):
     d = {}
     # Check if profile exists
-    rows = get_profile(profile_name)
+    rows = fetch_profile_db(profile_name)
     exists = profile_exists_in_db(rows)
     if not exists:
         abort(404)
@@ -306,11 +306,9 @@ def fetch_puuid(game_name: str, tag_line: str) -> str:
         add_account_to_db(puuid, game_name, tag_line)
     return puuid
 
-@app.route('/fetch_account_total_mastery', methods=['GET'])
-def fetch_account_total_mastery_route():
+
+def fetch_account_total_mastery_riot(game_name: str, tag_line: str) -> int:
     # Given the gameName and tagLine of a North American account, return all the champion masteries of that account
-    game_name = request.args.get('gameName')
-    tag_line = request.args.get('tagLine')
     # Get puuid
     puuid = fetch_puuid(game_name, tag_line)
     # print(puuid)
@@ -321,10 +319,16 @@ def fetch_account_total_mastery_route():
     total_champion_mastery_score = 0
     for champion in champion_masteries:
         total_champion_mastery_score += champion['championPoints']
+    return total_champion_mastery_score
+
+
+@app.route('/fetch_account_total_mastery', methods=['GET'])
+def fetch_account_total_mastery_route():
+    # Given the gameName and tagLine of a North American account, return all the champion masteries of that account
+    game_name = request.args.get('gameName')
+    tag_line = request.args.get('tagLine')
+    total_champion_mastery_score = fetch_account_total_mastery_riot(game_name, tag_line)
     return jsonify(total_champion_mastery_score)
-
-
-
 
 
 @app.route('/fetch_profile_total_mastery', methods=['GET'])
