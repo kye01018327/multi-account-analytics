@@ -326,3 +326,10 @@ def fetch_account_total_mastery_route():
 
 
 
+
+@app.route('/fetch_profile_total_mastery', methods=['GET'])
+def fetch_profile_total_mastery_route():
+    pass
+
+
+
